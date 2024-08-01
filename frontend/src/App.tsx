@@ -1,6 +1,7 @@
 import Editor from "@monaco-editor/react";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
+import Textarea from "@mui/joy/Textarea";
 import './App.css'
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
               <Button variant="contained">File</Button>
               <Button variant="contained">Run</Button>
           </Stack>
+          <Textarea></Textarea>
       </>
   )
 }
