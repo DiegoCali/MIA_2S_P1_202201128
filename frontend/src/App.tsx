@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import CssBaseline from "@mui/material/CssBaseline";
 import {createTheme, ThemeProvider} from "@mui/material";
-import {useRef} from "react";
+import {useRef, useState} from "react";
 import './App.css'
 
 const darkTheme = createTheme({
@@ -14,14 +14,32 @@ const darkTheme = createTheme({
 
 function App() {
     const editorRef = useRef(null);
+    const [file, setFile] = useState<File>(null);
+
+    function openFile(){
+        if (file){
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
+                editorRef.current.setValue(e.target.result);
+            }
+            reader.readAsText(file);
+        } else {
+            alert("No file selected")
+        }
+    }
 
     function handleEditorDidMount(editor: any){
         editorRef.current = editor;
     }
 
     function addText(){
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         document.getElementById("Console").innerText = editorRef.current.getValue()
     }
+
   return (
 
       <>
@@ -38,7 +56,8 @@ function App() {
                   onMount={handleEditorDidMount}
               />
               <Stack spacing={2} direction="row">
-                  <Button variant="outlined">File</Button>
+                  <input onChange={ (e) => {setFile(e.target.files[0])}} type="file"/>
+                  <Button variant="outlined" onClick={openFile}>Open File</Button>
                   <Button variant="outlined" onClick={addText}>Run</Button>
               </Stack>
               <textarea
