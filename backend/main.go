@@ -13,6 +13,12 @@ func main() {
 			"message": "Hello World",
 		})
 	})
+	router.POST("/run-code", func(c *gin.Context) {
+		code := c.PostForm("code")
+		c.JSON(http.StatusOK, gin.H{
+			"received": code,
+		})
+	})
 	fmt.Println("Server running http://localhost:8080")
 	err := router.Run(":8080")
 	if err != nil {
