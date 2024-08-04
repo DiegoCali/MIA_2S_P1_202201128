@@ -35,9 +35,11 @@ function App() {
     }
 
     function addText(){
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://localhost:8080/run-code");
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        document.getElementById("Console").innerText = editorRef.current.getValue()
+        xhr.send(JSON.stringify({"code": editorRef.current.getValue()}));
     }
 
   return (
