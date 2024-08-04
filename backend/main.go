@@ -1,6 +1,7 @@
 package main
 
 import (
+	interpreter "backend/interpreter"
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,14 @@ func main() {
 	})
 	router.POST("/run-code", func(c *gin.Context) {
 		code := c.PostForm("code")
+		tokens, err := interpreter.Lex(code)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		fmt.Println(tokens)
 		c.JSON(http.StatusOK, gin.H{
 			"received": code,
 		})
