@@ -25,16 +25,22 @@ func main() {
 			})
 			return
 		}
-		tree, err := interpreter.Parse(tokens)
+		stack, err := interpreter.Parse(tokens)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
-		interpreter.Traverse(tree)
+		output, err := interpreter.Execute(stack)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
-			"received": code,
+			"received": output,
 		})
 	})
 	fmt.Println("Server running http://localhost:8080")

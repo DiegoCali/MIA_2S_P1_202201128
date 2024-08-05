@@ -1,6 +1,8 @@
 package interpreter
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Instruction struct {
 	command string
@@ -12,8 +14,8 @@ type Stack struct {
 }
 
 type Option struct {
-	name  string
-	value string
+	Name  string
+	Value string
 }
 
 func Parse(tokens []Token) (Stack, error) {
@@ -58,20 +60,29 @@ func readCommand(tokens []Token, pos int) (Instruction, int, error) {
 
 func readOption(tokens []Token, pos int) (Option, int, error) {
 	var option Option
-	option.name = tokens[pos].value
+	option.Name = tokens[pos].value
 	pos++
 	if tokens[pos].kind != "VALUE" {
 		return option, pos, fmt.Errorf("expected VALUE, got %s", tokens[pos].kind)
 	}
-	option.value = tokens[pos].value
+	option.Value = tokens[pos].value
 	pos++
 	return option, pos, nil
 }
 
-func Traverse(root Stack) {
+func Execute(root Stack) (string, error) {
 	// Execute the instructions
+	var output string
 	for _, instruction := range root.instruction {
 		// Execute the instruction
-		fmt.Println(instruction.command, instruction.options)
+		if instruction.command == "mkdisk" {
+			message, err := MkDisk(instruction.options)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+		}
 	}
+	return output, nil
 }
