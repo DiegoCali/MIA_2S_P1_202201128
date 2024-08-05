@@ -25,7 +25,14 @@ func main() {
 			})
 			return
 		}
-		fmt.Println(tokens)
+		tree, err := interpreter.Parse(tokens)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		interpreter.Traverse(tree)
 		c.JSON(http.StatusOK, gin.H{
 			"received": code,
 		})
