@@ -1,6 +1,8 @@
 package interpreter
 
-import "unicode"
+import (
+	"unicode"
+)
 
 type Token struct {
 	kind  string
@@ -13,7 +15,13 @@ func Lex(input string) ([]Token, error) {
 	for pos < len(input) {
 		character := input[pos]
 		// skip whitespace
-		if character == ' ' || character == '\n' || character == '\t' {
+		if character == ' ' || character == '\t' {
+			pos++
+			continue
+		}
+		// newlines are terminators
+		if character == '\n' {
+			tokens = append(tokens, Token{"TERMINATOR", "n"})
 			pos++
 			continue
 		}
@@ -28,8 +36,8 @@ func Lex(input string) ([]Token, error) {
 		}
 		// options are words with a dash before them
 		if character == '-' {
-			start := pos
 			pos++
+			start := pos
 			for pos < len(input) && unicode.IsLetter(rune(input[pos])) {
 				pos++
 			}
@@ -49,6 +57,17 @@ func Lex(input string) ([]Token, error) {
 		if character == '=' {
 			pos++
 			start := pos
+			// lexer can also read strings
+			if input[pos] == '"' {
+				pos++
+				start := pos
+				for pos < len(input) && input[pos] != '"' {
+					pos++
+				}
+				tokens = append(tokens, Token{"VALUE", input[start:pos]})
+				pos++
+				continue
+			}
 			// stop until whitespace
 			for pos < len(input) && input[pos] != ' ' && input[pos] != '\n' && input[pos] != '\t' {
 				pos++
@@ -58,6 +77,7 @@ func Lex(input string) ([]Token, error) {
 		}
 		// any other character is invalid
 		tokens = append(tokens, Token{"INVALID", string(character)})
+		pos++
 	}
 	return tokens, nil
 }
