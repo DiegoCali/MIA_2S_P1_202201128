@@ -99,11 +99,22 @@ func createDisk(size int, fit string, unit string, path string) error {
 			fmt.Println("Error closing file")
 		}
 	}(file)
-	copy(mbr.Size[:], strconv.Itoa(size))
-	copy(mbr.TimeStamp[:], strconv.Itoa(int(timeFloat)))
-	copy(mbr.Signature[:], strconv.Itoa(rand.Intn(1000)))
+	// Fill MBR
+	binary.LittleEndian.PutUint32(mbr.Size[:], uint32(sizeBytes))
+	binary.LittleEndian.PutUint32(mbr.TimeStamp[:], uint32(timeFloat))
+	binary.LittleEndian.PutUint32(mbr.Signature[:], rand.Uint32())
 	copy(mbr.Fit[:], fit)
-	// Write MBR to file
+	// Fill partitions
+	for i := range mbr.Partitions {
+		copy(mbr.Partitions[i].Status[:], "0")
+		copy(mbr.Partitions[i].Type[:], "N")
+		copy(mbr.Partitions[i].Fit[:], "N")
+		copy(mbr.Partitions[i].Start[:], "NULL")
+		copy(mbr.Partitions[i].Size[:], "NULL")
+		copy(mbr.Partitions[i].Name[:], "----------------")
+		copy(mbr.Partitions[i].Correlative[:], "NULL")
+		copy(mbr.Partitions[i].Id[:], "NULL")
+	}
 	err = writeFile(file, mbr, sizeBytes)
 	if err != nil {
 		return err
@@ -148,6 +159,41 @@ func writeFile(file *os.File, mbr MBR, size int) error {
 	return nil
 }
 
+func readMBR(path string) (MBR, error) {
+	var mbr MBR
+	file, err := os.Open(path)
+	if err != nil {
+		return mbr, err
+	}
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return mbr, err
+	}
+	err = binary.Read(file, binary.LittleEndian, &mbr)
+	if err != nil {
+		return mbr, err
+	}
+	fmt.Println("MBR read successfully")
+	// Read MBR data
+	fmt.Println("Size: ", binary.LittleEndian.Uint32(mbr.Size[:]), " bytes")
+	fmt.Println("TimeStamp: ", binary.LittleEndian.Uint32(mbr.TimeStamp[:]))
+	fmt.Println("Signature: ", binary.LittleEndian.Uint32(mbr.Signature[:]))
+	fmt.Println("Fit: ", string(mbr.Fit[:]))
+	// Read partitions
+	for i, partition := range mbr.Partitions {
+		fmt.Println("Partition ", i)
+		fmt.Println("Status: ", string(partition.Status[:]))
+		fmt.Println("Type: ", string(partition.Type[:]))
+		fmt.Println("Fit: ", string(partition.Fit[:]))
+		fmt.Println("Start: ", string(partition.Start[:]))
+		fmt.Println("Size: ", string(partition.Size[:]))
+		fmt.Println("Name: ", string(partition.Name[:]))
+		fmt.Println("Correlative: ", string(partition.Correlative[:]))
+		fmt.Println("Id: ", string(partition.Id[:]))
+	}
+	return mbr, nil
+}
+
 func timeToFloat(time time.Time) float64 {
 	year := time.Year()
 	month := monthToInt(time.Month())
@@ -155,7 +201,8 @@ func timeToFloat(time time.Time) float64 {
 	hour := time.Hour()
 	minute := time.Minute()
 	second := time.Second()
-	return float64(year*10000000000 + month*100000000 + day*1000000 + hour*10000 + minute*100 + second)
+	dateFloat := float64(year*10000 + month*100 + day + hour/100 + minute/10000 + second/1000000)
+	return dateFloat
 }
 
 func monthToInt(month time.Month) int {
