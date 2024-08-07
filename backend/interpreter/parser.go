@@ -82,7 +82,18 @@ func Execute(root Stack) (string, error) {
 			} else {
 				output += message + "\n"
 			}
+			continue
 		}
+		if instruction.command == "rmdisk" {
+			message, err := RmDisk(instruction.options)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
+
 	}
 	return output, nil
 }

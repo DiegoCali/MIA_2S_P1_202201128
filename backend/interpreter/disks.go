@@ -9,31 +9,12 @@ import (
 	"time"
 )
 
-type MBR struct {
-	Size       [4]byte
-	TimeStamp  [4]byte
-	Signature  [4]byte
-	Fit        [1]byte
-	Partitions [4]Partition
-}
-
-type Partition struct {
-	Status      [1]byte
-	Type        [1]byte
-	Fit         [1]byte
-	Start       [4]byte
-	Size        [4]byte
-	Name        [16]byte
-	Correlative [4]byte
-	Id          [4]byte
-}
-
 func MkDisk(options []Option) (string, error) {
 	var message string
 	size := -1
-	fit := "none"
-	unit := "none"
-	path := "none"
+	fit := "FF"
+	unit := "M"
+	path := "/home/diego/Documents/Archivos_2024/MIA_2S_P1_202201128/backend/disks/disk" + strconv.Itoa(rand.Intn(1000)) + ".mia"
 	for _, option := range options {
 		if option.Name == "size" {
 			//Parse string to int
@@ -66,21 +47,80 @@ func MkDisk(options []Option) (string, error) {
 	return message, nil
 }
 
-func createDisk(size int, fit string, unit string, path string) error {
-	var mbr MBR
-	if fit == "none" {
-		fit = "F"
-	} else {
-		// Get only first char
-		fit = fit[:1]
-	}
-	if unit == "none" {
-		unit = "M"
+func RmDisk(options []Option) (string, error) {
+	var message string
+	path := "none"
+	for _, option := range options {
+		if option.Name == "path" {
+			path = option.Value
+			break
+		}
 	}
 	if path == "none" {
-		// Create file in /home/diego/Documents/Archivos_2024/MIA_2S_P1_202201128/backend/disks
-		path = "/home/diego/Documents/Archivos_2024/MIA_2S_P1_202201128/backend/disks/disk" + strconv.Itoa(rand.Intn(1000)) + ".mia"
+		return "ERROR: Disk not removed", fmt.Errorf("-path is required")
 	}
+	err := os.Remove(path)
+	if err != nil {
+		return "ERROR: Disk not removed", err
+	}
+	message = "Disk removed successfully, path: " + path
+	return message, nil
+}
+func FDisk(options []Option) (string, error) {
+	var message string
+	size := -1
+	unit := "K"
+	path := "none"
+	typePartition := "P"
+	fit := "WF"
+	name := "none"
+	for _, option := range options {
+		if option.Name == "size" {
+			//Parse string to int
+			size, _ = strconv.Atoi(option.Value)
+			continue
+		}
+		if option.Name == "unit" {
+			unit = option.Value
+			continue
+		}
+		if option.Name == "path" {
+			path = option.Value
+			continue
+		}
+		if option.Name == "type" {
+			typePartition = option.Value
+			continue
+		}
+		if option.Name == "fit" {
+			fit = option.Value
+			continue
+		}
+		if option.Name == "name" {
+			name = option.Value
+			continue
+		}
+	}
+	if size == -1 {
+		return "ERROR: Partition not created", fmt.Errorf("-size is required")
+	}
+	if path == "none" {
+		return "ERROR: Partition not created", fmt.Errorf("-path is required")
+	}
+	if name == "none" {
+		return "ERROR: Partition not created", fmt.Errorf("-name is required")
+	}
+	err := createPartition(size, unit, path, typePartition, fit, name)
+	if err != nil {
+		return "ERROR: Partition not created", err
+	}
+	return message, nil
+}
+
+func createDisk(size int, fit string, unit string, path string) error {
+	var mbr MBR
+	// Get only first char
+	fit = fit[:1]
 	sizeBytes, err := convertToBytes(size, unit)
 	if err != nil {
 		return err
@@ -122,6 +162,11 @@ func createDisk(size int, fit string, unit string, path string) error {
 	return nil
 }
 
+func createPartition(size int, unit string, path string, typePartition string, fit string, name string) error {
+
+	return nil
+}
+
 func convertToBytes(size int, unit string) (int, error) {
 	if unit == "k" || unit == "K" {
 		size = size * 1024
@@ -146,7 +191,6 @@ func writeFile(file *os.File, mbr MBR, size int) error {
 		}
 		size -= writeSize
 	}
-	fmt.Println("[File created successfully] in " + file.Name())
 	// Write MBR to file
 	_, err := file.Seek(0, 0)
 	if err != nil {
