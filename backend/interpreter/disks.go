@@ -162,13 +162,10 @@ func createDisk(size int, fit string, unit string, path string) error {
 	return nil
 }
 
-func createPartition(size int, unit string, path string, typePartition string, fit string, name string) error {
-
-	return nil
-}
-
 func convertToBytes(size int, unit string) (int, error) {
-	if unit == "k" || unit == "K" {
+	if unit == "b" || unit == "B" {
+		return size, nil
+	} else if unit == "k" || unit == "K" {
 		size = size * 1024
 	} else if unit == "m" || unit == "M" {
 		size = size * 1024 * 1024

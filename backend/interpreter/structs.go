@@ -18,3 +18,9 @@ type Partition struct {
 	Correlative [4]byte
 	Id          [4]byte
 }
+
+type Space struct {
+	Start int
+	End   int
+	Size  int
+}
