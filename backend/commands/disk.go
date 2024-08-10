@@ -13,29 +13,36 @@ func MkDisk(size int, fit string, unit string, path string) (string, error) {
 	if err != nil {
 		return "Error: Coudn't create disk", err
 	}
-	// Create file in path
-	file, err := os.Create(path)
+	// Today's date
+	timeFloat := float32(time.Now().Unix())
+	// Create MBR
+	mbr := &structures.MBR{}
+	err = mbr.Set(int32(sizeBytes), timeFloat, rand.Int31(), fit)
 	if err != nil {
 		return "Error: Coudn't create disk", err
 	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			return
-		}
-	}(file)
-	// Today's date
-	timeFloat := utils.TimeToFloat(time.Now())
-	// Create MBR
-	mbr := &structures.MBR{}
-	err = mbr.Set(sizeBytes, timeFloat, rand.Int31(), fit)
+	// Create disk
+	err = utils.CreateDisk(path, sizeBytes)
 	if err != nil {
-		return "", err
+		return "Error: Coudn't create disk", err
 	}
-	// Write MBR in file
+	// Serialize MBR
+	err = mbr.Serialize(path)
+	if err != nil {
+		return "Error: Coudn't serialize MBR", err
+	}
 	return "Disk created succesfully", nil
 }
 
 func RmDisk(path string) (string, error) {
+	err := os.Remove(path)
+	if err != nil {
+		return "Error: Coudn't remove disk", err
+	}
 	return "Disk removed succesfully", nil
+}
+
+func FDisk(size int, unit string, path string, typeP string, fit string, name string) (string, error) {
+
+	return "Partition createed succesfully", nil
 }
