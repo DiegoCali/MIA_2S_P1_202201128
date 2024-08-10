@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-func ConvertToBytes(size int, unit string) (int, error) {
+func ConvertToBytes(size int, unit string) (int32, error) {
 	if unit == "b" || unit == "B" {
-		return size, nil
+		return int32(size), nil
 	} else if unit == "k" || unit == "K" {
 		size = size * 1024
 	} else if unit == "m" || unit == "M" {
@@ -15,17 +15,17 @@ func ConvertToBytes(size int, unit string) (int, error) {
 	} else {
 		return -1, fmt.Errorf("unit %s not recognized", unit)
 	}
-	return size, nil
+	return int32(size), nil
 }
 
-func TimeToFloat(time time.Time) float64 {
+func TimeToFloat(time time.Time) float32 {
 	year := time.Year()
 	month := monthToInt(time.Month())
 	day := time.Day()
 	hour := time.Hour()
 	minute := time.Minute()
 	second := time.Second()
-	dateFloat := float64(year*10000 + month*100 + day + hour/100 + minute/10000 + second/1000000)
+	dateFloat := float32(year*10000 + month*100 + day + hour/100 + minute/10000 + second/1000000)
 	return dateFloat
 }
 

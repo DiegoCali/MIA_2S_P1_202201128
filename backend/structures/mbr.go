@@ -15,7 +15,7 @@ type MBR struct {
 	Partitions [4]Partition // bytes: 38 * 4 = 152
 }
 
-func (mbr *MBR) Create(size int32, time float32, sign int32, fit string) error {
+func (mbr *MBR) Set(size int32, time float32, sign int32, fit string) error {
 	mbr.Size = size
 	mbr.TimeStamp = time
 	mbr.Signature = sign
