@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	cmds "backend/commands"
 	"fmt"
 )
 
@@ -76,7 +77,11 @@ func Execute(root Stack) (string, error) {
 	for _, instruction := range root.instruction {
 		// Execute the instruction
 		if instruction.command == "mkdisk" {
-			message, err := MkDisk(instruction.options)
+			size, fit, unit, path, err := getDisk(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.MkDisk(size, fit, unit, path)
 			if err != nil {
 				return output, err
 			} else {
@@ -85,7 +90,11 @@ func Execute(root Stack) (string, error) {
 			continue
 		}
 		if instruction.command == "rmdisk" {
-			message, err := RmDisk(instruction.options)
+			path, err := getRDisk(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.RmDisk(path)
 			if err != nil {
 				return output, err
 			} else {
