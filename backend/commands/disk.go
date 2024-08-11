@@ -41,8 +41,3 @@ func RmDisk(path string) (string, error) {
 	}
 	return "Disk removed succesfully", nil
 }
-
-func FDisk(size int, unit string, path string, typeP string, fit string, name string) (string, error) {
-
-	return "Partition createed succesfully", nil
-}

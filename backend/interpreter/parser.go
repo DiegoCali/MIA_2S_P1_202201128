@@ -102,7 +102,19 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
-
+		if instruction.command == "fdisk" {
+			size, unit, path, typeP, fit, name, err := getPartition(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.FDisk(size, unit, path, typeP, fit, name)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
 	}
 	return output, nil
 }
