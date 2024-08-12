@@ -27,9 +27,9 @@ func (mbr *MBR) Set(size int32, time float32, sign int32, fit string) error {
 		mbr.Partitions[i].Fit[0] = '\x00'
 		mbr.Partitions[i].Start = -1
 		mbr.Partitions[i].Size = -1
-		copy(mbr.Partitions[i].Name[:], "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
+		copy(mbr.Partitions[i].Name[:], "")
 		mbr.Partitions[i].Correlative = -1
-		copy(mbr.Partitions[i].Id[:], "\x00\x00\x00\x00")
+		copy(mbr.Partitions[i].Id[:], "")
 	}
 	return nil
 }

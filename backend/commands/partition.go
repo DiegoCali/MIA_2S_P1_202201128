@@ -26,9 +26,9 @@ func FDisk(size int, unit string, path string, typeP string, fit string, name st
 	case "P":
 		err = createPrimaryPartition(mbr, sizeBytes, fit, name)
 	case "E":
-		err = createExtendedPartition(mbr, sizeBytes, fit, name)
+		err = createExtendedPartition(mbr, sizeBytes, fit, name, path)
 	case "L":
-		err = createLogicalPartition(mbr, sizeBytes, fit, name)
+		err = createLogicalPartition(mbr, sizeBytes, fit, name, path)
 	default:
 		return "Error: Partition type not recognized", nil
 	}
@@ -61,7 +61,7 @@ func createPrimaryPartition(mbr *structures.MBR, sizeBytes int, fit string, name
 	return nil
 }
 
-func createExtendedPartition(mbr *structures.MBR, sizeBytes int, fit string, name string) error {
+func createExtendedPartition(mbr *structures.MBR, sizeBytes int, fit string, name string, path string) error {
 	_, exists := checkIfExtendedPartitionExists(mbr)
 	if exists {
 		return fmt.Errorf("error: Extended partition already exists")
@@ -79,20 +79,57 @@ func createExtendedPartition(mbr *structures.MBR, sizeBytes int, fit string, nam
 	copy(mbr.Partitions[index].Name[:], name)
 	mbr.Partitions[index].Correlative = int32(index)
 	copy(mbr.Partitions[index].Id[:], "----")
-	// TODO: Create EBR
+	// Create EBR
+	ebr := &structures.EBR{}
+	err = ebr.Set(-1, "", mbr.Partitions[index].Start+33, -1, -1, "")
+	if err != nil {
+		return err
+	}
+	err = ebr.Serialize(path, int(mbr.Partitions[index].Start))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func createLogicalPartition(mbr *structures.MBR, sizeBytes int, fit string, name string) error {
+func createLogicalPartition(mbr *structures.MBR, sizeBytes int, fit string, name string, path string) error {
 	index, exists := checkIfExtendedPartitionExists(mbr)
 	if !exists {
 		return fmt.Errorf("error: Extended partition doesn't exist")
 	}
-	// Get EBR offset
-	offset := mbr.Partitions[index].Start
 	// Read EBR
+	offset, err := mbr.Partitions[index].GetLastEBR(path)
+	if err != nil {
+		return err
+	}
 	ebr := &structures.EBR{}
-	fmt.Println("EBR offset: ", offset, ebr)
+	err = ebr.Deserialize(path, int(offset))
+	if err != nil {
+		return err
+	}
+	// Check if there is enough space
+	if ebr.Start+int32(sizeBytes)+33 < mbr.Partitions[index].Size {
+		return fmt.Errorf("error: Not enough space in extended partition")
+	}
+	// Set new data to EBR
+	err = ebr.Set(0, fit, ebr.Start, int32(sizeBytes), ebr.Start+int32(sizeBytes)+1, name)
+	if err != nil {
+		return err
+	}
+	err = ebr.Serialize(path, int(offset))
+	if err != nil {
+		return err
+	}
+	// Write next EBR
+	nextEbr := &structures.EBR{}
+	err = nextEbr.Set(-1, "", ebr.Start+int32(sizeBytes)+1, -1, -1, "")
+	if err != nil {
+		return err
+	}
+	err = nextEbr.Serialize(path, int(ebr.Start+int32(sizeBytes)))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
