@@ -27,9 +27,9 @@ func (mbr *MBR) Set(size int32, time float32, sign int32, fit string) error {
 		mbr.Partitions[i].Fit[0] = '\x00'
 		mbr.Partitions[i].Start = -1
 		mbr.Partitions[i].Size = -1
-		copy(mbr.Partitions[i].Name[:], "----------------")
+		copy(mbr.Partitions[i].Name[:], "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00")
 		mbr.Partitions[i].Correlative = -1
-		copy(mbr.Partitions[i].Id[:], "----")
+		copy(mbr.Partitions[i].Id[:], "\x00\x00\x00\x00")
 	}
 	return nil
 }
@@ -75,5 +75,31 @@ func (mbr *MBR) Deserialize(path string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (mbr *MBR) Print() {
+	println("Size: ", mbr.Size)
+	println("TimeStamp: ", mbr.TimeStamp)
+	println("Signature: ", mbr.Signature)
+	println("Fit: ", string(mbr.Fit[:]))
+	println("----------------PARTITIONS--------------------")
+	for i := 0; i < 4; i++ {
+		println("---------------------------------------------")
+		println("Partition ", i+1)
+		println("Status: ", mbr.Partitions[i].Status)
+		println("Type: ", string(mbr.Partitions[i].Type[:]))
+		println("Fit: ", string(mbr.Partitions[i].Fit[:]))
+		println("Start: ", mbr.Partitions[i].Start)
+		println("Size: ", mbr.Partitions[i].Size)
+		println("Name: ", string(mbr.Partitions[i].Name[:]))
+		println("Correlative: ", mbr.Partitions[i].Correlative)
+		println("Id: ", string(mbr.Partitions[i].Id[:]))
+		println("---------------------------------------------")
+	}
+}
+
+func (mbr *MBR) DotMbr(output string) error {
+
 	return nil
 }
