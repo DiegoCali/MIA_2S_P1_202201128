@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func ConvertToBytes(size int, unit string) (int, error) {
@@ -47,4 +48,9 @@ func CreateDisk(path string, sizeBytes int) error {
 		sizeBytes -= writeSize
 	}
 	return nil
+}
+
+func Int64ToDate(timestamp int64) string {
+	t := time.Unix(timestamp, 0)
+	return t.Format("2006-01-02 15:04:05")
 }

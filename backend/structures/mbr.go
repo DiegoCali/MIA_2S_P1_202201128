@@ -1,21 +1,22 @@
 package structures
 
 import (
+	"backend/utils"
 	"bytes"
 	"encoding/binary"
 	"os"
 )
 
-// MBR Size in bytes: 165
+// MBR Size in bytes: 169
 type MBR struct {
 	Size       int32        // bytes: 4
-	TimeStamp  float32      // bytes: 4
+	TimeStamp  int64        // bytes: 8
 	Signature  int32        // bytes: 4
 	Fit        [1]byte      // bytes: 1
 	Partitions [4]Partition // bytes: 38 * 4 = 152
 }
 
-func (mbr *MBR) Set(size int32, time float32, sign int32, fit string) error {
+func (mbr *MBR) Set(size int32, time int64, sign int32, fit string) error {
 	mbr.Size = size
 	mbr.TimeStamp = time
 	mbr.Signature = sign
@@ -80,7 +81,7 @@ func (mbr *MBR) Deserialize(path string) error {
 
 func (mbr *MBR) Print() {
 	println("Size: ", mbr.Size)
-	println("TimeStamp: ", mbr.TimeStamp)
+	println("TimeStamp: ", utils.Int64ToDate(mbr.TimeStamp))
 	println("Signature: ", mbr.Signature)
 	println("Fit: ", string(mbr.Fit[:]))
 	println("----------------PARTITIONS--------------------")

@@ -58,6 +58,7 @@ func createPrimaryPartition(mbr *structures.MBR, sizeBytes int, fit string, name
 	copy(mbr.Partitions[index].Name[:], name)
 	mbr.Partitions[index].Correlative = int32(index)
 	copy(mbr.Partitions[index].Id[:], "----")
+	// TODO: Create SuperBlocks and Inodes
 	return nil
 }
 
@@ -108,7 +109,7 @@ func createLogicalPartition(mbr *structures.MBR, sizeBytes int, fit string, name
 		return err
 	}
 	// Check if there is enough space
-	if ebr.Start+int32(sizeBytes)+33 < mbr.Partitions[index].Size {
+	if ebr.Start+int32(sizeBytes)+33 > mbr.Partitions[index].Start+mbr.Partitions[index].Size {
 		return fmt.Errorf("error: Not enough space in extended partition")
 	}
 	// Set new data to EBR
@@ -126,7 +127,7 @@ func createLogicalPartition(mbr *structures.MBR, sizeBytes int, fit string, name
 	if err != nil {
 		return err
 	}
-	err = nextEbr.Serialize(path, int(ebr.Start+int32(sizeBytes)))
+	err = nextEbr.Serialize(path, int(nextEbr.Start))
 	if err != nil {
 		return err
 	}
