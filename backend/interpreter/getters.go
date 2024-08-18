@@ -5,12 +5,12 @@ import (
 	"strconv"
 )
 
-func getDisk(opions []Option) (int, string, string, string, error) {
+func getDisk(options []Option) (int, string, string, string, error) {
 	size := -1
 	fit := "FF"
 	unit := "M"
 	path := ""
-	for _, option := range opions {
+	for _, option := range options {
 		switch option.Name {
 		case "size":
 			size, _ = strconv.Atoi(option.Value)
@@ -20,6 +20,8 @@ func getDisk(opions []Option) (int, string, string, string, error) {
 			unit = option.Value
 		case "path":
 			path = option.Value
+		default:
+			return -1, "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
 		}
 	}
 	if size <= 0 {
@@ -36,6 +38,8 @@ func getRDisk(options []Option) (string, error) {
 	for _, option := range options {
 		if option.Name == "path" {
 			path = option.Value
+		} else {
+			return "\x00", fmt.Errorf("invalid option %s", option.Name)
 		}
 	}
 	if path == "" {
@@ -44,14 +48,14 @@ func getRDisk(options []Option) (string, error) {
 	return path, nil
 }
 
-func getPartition(option []Option) (int, string, string, string, string, string, error) {
+func getPartition(options []Option) (int, string, string, string, string, string, error) {
 	size := -1
 	unit := "K"
 	path := ""
 	typeP := "P"
 	fit := "WF"
 	name := ""
-	for _, option := range option {
+	for _, option := range options {
 		switch option.Name {
 		case "size":
 			size, _ = strconv.Atoi(option.Value)
@@ -65,6 +69,8 @@ func getPartition(option []Option) (int, string, string, string, string, string,
 			fit = option.Value[0:1]
 		case "name":
 			name = option.Value
+		default:
+			return -1, "\x00", "\x00", "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
 		}
 	}
 	if size <= 0 {
@@ -77,4 +83,35 @@ func getPartition(option []Option) (int, string, string, string, string, string,
 		return -1, "\x00", "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -name option")
 	}
 	return size, unit, path, typeP, fit, name, nil
+}
+
+func getRep(options []Option) (string, string, string, string, error) {
+	id := ""
+	path := ""
+	name := ""
+	route := "/home/diego/Documents/report"
+	for _, option := range options {
+		switch option.Name {
+		case "id":
+			id = option.Value
+		case "path":
+			path = option.Value
+		case "name":
+			name = option.Value
+		case "ruta":
+			route = option.Value
+		default:
+			return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
+		}
+	}
+	if id == "" {
+		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -id option")
+	}
+	if path == "" {
+		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -path option")
+	}
+	if name == "" {
+		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -name option")
+	}
+	return id, path, name, route, nil
 }

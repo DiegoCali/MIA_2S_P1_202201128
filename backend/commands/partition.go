@@ -164,7 +164,7 @@ func checkIfEnoughSpace(mbr *structures.MBR, sizeBytes int) bool {
 
 func getStartPartition(mbr *structures.MBR, index int) int32 {
 	if index == 0 {
-		return 166 // MBR size
+		return 170 // MBR size
 	}
 	return mbr.Partitions[index-1].Start + mbr.Partitions[index-1].Size + 1
 }

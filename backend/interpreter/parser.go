@@ -115,6 +115,19 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
+		if instruction.command == "rep" {
+			id, path, name, route, err := getRep(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.Rep(id, path, name, route)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
 	}
 	return output, nil
 }
