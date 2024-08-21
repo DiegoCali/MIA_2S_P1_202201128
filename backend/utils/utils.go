@@ -54,3 +54,27 @@ func Int64ToDate(timestamp int64) string {
 	t := time.Unix(timestamp, 0)
 	return t.Format("2006-01-02 15:04:05")
 }
+
+const Carnet string = "28"
+
+var alphabet = []string{
+	"A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
+	"K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
+	"U", "V", "W", "X", "Y", "Z",
+}
+
+var pathToLetter = make(map[string]string)
+
+var nextLetter = 0
+
+func GetLetter(path string) (string, error) {
+	if _, exists := pathToLetter[path]; exists {
+		if nextLetter < len(alphabet) {
+			pathToLetter[path] = alphabet[nextLetter]
+			nextLetter++
+		} else {
+			return "", fmt.Errorf("error: maximum number of partitions reached")
+		}
+	}
+	return pathToLetter[path], nil
+}

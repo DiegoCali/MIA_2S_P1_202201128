@@ -56,7 +56,6 @@ func createPrimaryPartition(mbr *structures.MBR, sizeBytes int, fit string, name
 	mbr.Partitions[index].Start = getStartPartition(mbr, index)
 	mbr.Partitions[index].Size = int32(sizeBytes)
 	copy(mbr.Partitions[index].Name[:], name)
-	mbr.Partitions[index].Correlative = int32(index)
 	copy(mbr.Partitions[index].Id[:], "----")
 	// TODO: Create SuperBlocks and Inodes
 	return nil
@@ -78,7 +77,6 @@ func createExtendedPartition(mbr *structures.MBR, sizeBytes int, fit string, nam
 	mbr.Partitions[index].Start = getStartPartition(mbr, index)
 	mbr.Partitions[index].Size = int32(sizeBytes)
 	copy(mbr.Partitions[index].Name[:], name)
-	mbr.Partitions[index].Correlative = int32(index)
 	copy(mbr.Partitions[index].Id[:], "----")
 	// Create EBR
 	ebr := &structures.EBR{}

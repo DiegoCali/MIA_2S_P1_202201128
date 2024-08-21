@@ -4,6 +4,7 @@ import (
 	"backend/utils"
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"os"
 	"strconv"
 )
@@ -122,6 +123,7 @@ func (mbr *MBR) DotMbr(output string) error {
 	// Partitions
 	for i := 0; i < 4; i++ {
 		strFile += "<TR><TD>part_status</TD><TD>" + strconv.Itoa(int(mbr.Partitions[i].Status)) + "</TD></TR>\n"
+		// TODO: check if partition is extended
 		// check if type and fit is \x00
 		if mbr.Partitions[i].Type[0] == '\x00' {
 			strFile += "<TR><TD>part_type</TD><TD>none</TD></TR>\n"
@@ -155,4 +157,13 @@ func (mbr *MBR) DotMbr(output string) error {
 		return err
 	}
 	return nil
+}
+
+func (mbr *MBR) GetPartitionIndex(name string) (int, error) {
+	for i := 0; i < 4; i++ {
+		if string(mbr.Partitions[i].Name[:]) == name {
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("error: partition %s not found", name)
 }
