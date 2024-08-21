@@ -22,8 +22,8 @@ func Mount(path string, name string) (string, error) {
 	if err != nil {
 		return "Error: Coudn't generate id", err
 	}
-	// Set partition id
-	copy(mbr.Partitions[index].Id[:], id)
+	// Save partition id in memory
+	utils.GlobalMounts[id] = path
 	return "Mounted succesfully!!", nil
 }
 

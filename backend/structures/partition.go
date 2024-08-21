@@ -1,5 +1,10 @@
 package structures
 
+import (
+	"backend/utils"
+	"strconv"
+)
+
 // Partition Size in bytes: 38
 type Partition struct {
 	Status      int32    // bytes: 4
@@ -33,4 +38,15 @@ func (part *Partition) GetLastEBR(path string) (int32, error) {
 		}
 	}
 	return offset, nil
+}
+
+func (part *Partition) GetPartitionStr() string {
+	str := "<TR><TD>PARTITION</TD></TR>\n"
+	str += "<TR><TD>part_status</TD><TD>" + strconv.Itoa(int(part.Status)) + "</TD></TR>\n"
+	str += "<TR><TD>part_type</TD><TD>" + utils.CheckNull(part.Type[:]) + "</TD></TR>\n"
+	str += "<TR><TD>part_fit</TD><TD>" + utils.CheckNull(part.Fit[:]) + "</TD></TR>\n"
+	str += "<TR><TD>part_start</TD><TD>" + strconv.Itoa(int(part.Start)) + "</TD></TR>\n"
+	str += "<TR><TD>part_size</TD><TD>" + strconv.Itoa(int(part.Size)) + "</TD></TR>\n"
+	str += "<TR><TD>part_name</TD><TD>" + utils.CheckNull(part.Name[:]) + "</TD></TR>\n"
+	return str
 }

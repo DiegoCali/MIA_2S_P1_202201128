@@ -78,3 +78,15 @@ func GetLetter(path string) (string, error) {
 	}
 	return pathToLetter[path], nil
 }
+
+func CheckNull(str []byte) string {
+	//
+	output := ""
+	for i := 0; i < len(str); i++ {
+		if str[i] == 0 {
+			break
+		}
+		output += string(str[i])
+	}
+	return output
+}

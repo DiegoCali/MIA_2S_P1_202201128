@@ -58,6 +58,7 @@ func createPrimaryPartition(mbr *structures.MBR, sizeBytes int, fit string, name
 	copy(mbr.Partitions[index].Name[:], name)
 	copy(mbr.Partitions[index].Id[:], "----")
 	// TODO: Create SuperBlocks and Inodes
+	// formula for number of structures: (sizeBytes - 76) / 298
 	return nil
 }
 

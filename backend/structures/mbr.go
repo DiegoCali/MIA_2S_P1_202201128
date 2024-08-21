@@ -122,33 +122,7 @@ func (mbr *MBR) DotMbr(output string) error {
 	strFile += "<TR><TD>mbr_disk_signature</TD><TD>" + strconv.Itoa(int(mbr.Signature)) + "</TD></TR>\n"
 	// Partitions
 	for i := 0; i < 4; i++ {
-		strFile += "<TR><TD>part_status</TD><TD>" + strconv.Itoa(int(mbr.Partitions[i].Status)) + "</TD></TR>\n"
-		// TODO: check if partition is extended
-		// check if type and fit is \x00
-		if mbr.Partitions[i].Type[0] == '\x00' {
-			strFile += "<TR><TD>part_type</TD><TD>none</TD></TR>\n"
-		} else {
-			strFile += "<TR><TD>part_type</TD><TD>" + string(mbr.Partitions[i].Type[:]) + "</TD></TR>\n"
-		}
-		if mbr.Partitions[i].Fit[0] == '\x00' {
-			strFile += "<TR><TD>part_fit</TD><TD>none</TD></TR>\n"
-		} else {
-			strFile += "<TR><TD>part_fit</TD><TD>" + string(mbr.Partitions[i].Fit[:]) + "</TD></TR>\n"
-		}
-		strFile += "<TR><TD>part_start</TD><TD>" + strconv.Itoa(int(mbr.Partitions[i].Start)) + "</TD></TR>\n"
-		strFile += "<TR><TD>part_size</TD><TD>" + strconv.Itoa(int(mbr.Partitions[i].Size)) + "</TD></TR>\n"
-		// check if name contains \x00
-		namestr := string(mbr.Partitions[i].Name[:])
-		for j := 0; j < len(namestr); j++ {
-			if namestr[j] == '\x00' {
-				namestr = namestr[:j]
-				break
-			}
-		}
-		if namestr == "" {
-			namestr = "none"
-		}
-		strFile += "<TR><TD>part_name</TD><TD>" + namestr + "</TD></TR>\n"
+		strFile += mbr.Partitions[i].GetPartitionStr()
 	}
 	strFile += "</TABLE>>];\n"
 	strFile += "}\n"

@@ -3,6 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 func getDisk(options []Option) (int, string, string, string, error) {
@@ -15,9 +16,9 @@ func getDisk(options []Option) (int, string, string, string, error) {
 		case "size":
 			size, _ = strconv.Atoi(option.Value)
 		case "fit":
-			fit = option.Value[0:1]
+			fit = strings.ToUpper(option.Value[0:1])
 		case "unit":
-			unit = option.Value
+			unit = strings.ToUpper(option.Value)
 		case "path":
 			path = option.Value
 		default:
@@ -60,13 +61,13 @@ func getPartition(options []Option) (int, string, string, string, string, string
 		case "size":
 			size, _ = strconv.Atoi(option.Value)
 		case "unit":
-			unit = option.Value
+			unit = strings.ToUpper(option.Value)
 		case "path":
 			path = option.Value
 		case "type":
-			typeP = option.Value
+			typeP = strings.ToUpper(option.Value)
 		case "fit":
-			fit = option.Value[0:1]
+			fit = strings.ToUpper(option.Value[0:1])
 		case "name":
 			name = option.Value
 		default:

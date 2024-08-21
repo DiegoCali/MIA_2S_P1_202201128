@@ -1,6 +1,6 @@
 package structures
 
-// SuperBlock Size in bytes: 68
+// SuperBlock Size in bytes: 76
 type SuperBlock struct {
 	Type            int32 // bytes: 4
 	InodesCount     int32 // bytes: 4
