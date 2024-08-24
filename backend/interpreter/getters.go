@@ -135,3 +135,22 @@ func getRep(options []Option) (string, string, string, error) {
 	}
 	return id, path, name, nil
 }
+
+func getFileSys(options []Option) (string, string, error) {
+	id := ""
+	typeF := "FULL"
+	for _, option := range options {
+		switch option.Name {
+		case "id":
+			id = option.Value
+		case "type":
+			typeF = strings.ToUpper(option.Value)
+		default:
+			return "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
+		}
+	}
+	if id == "" {
+		return "\x00", "\x00", fmt.Errorf("missing -id option")
+	}
+	return id, typeF, nil
+}

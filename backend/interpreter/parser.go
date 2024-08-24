@@ -128,6 +128,19 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
+		if instruction.command == "mkfs" {
+			id, typeF, err := getFileSys(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.MkFS(id, typeF)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)
 			if err != nil {
