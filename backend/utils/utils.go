@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -149,5 +150,16 @@ func Deserialize[T any](data *T, path string, offset int) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func PrintStruct[T any](data *T) error {
+	// Convert struct to json
+	jsonData, err := json.MarshalIndent(data, "", "   ")
+	if err != nil {
+		return err
+	}
+	// Print json
+	fmt.Println(string(jsonData))
 	return nil
 }

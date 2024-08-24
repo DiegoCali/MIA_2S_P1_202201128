@@ -57,6 +57,20 @@ func MkFS(id string, typeF string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	// TODO: Create root folder and users.txt file
+	// Create bitmaps
+	err = superBlock.CreateBitMaps(path)
+	if err != nil {
+		return "", err
+	}
+	// Init root
+	err = superBlock.InitRoot(path)
+	if err != nil {
+		return "", err
+	}
+	// Create users
+	err = superBlock.CreateUsers(path)
+	if err != nil {
+		return "", err
+	}
 	return "Partition formating to ext2 was successful...", nil
 }
