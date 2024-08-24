@@ -2,8 +2,6 @@ package structures
 
 import (
 	"backend/utils"
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"strconv"
@@ -33,50 +31,6 @@ func (mbr *MBR) Set(size int32, time int64, sign int32, fit string) error {
 		copy(mbr.Partitions[i].Name[:], "")
 		mbr.Partitions[i].Correlative = -1
 		copy(mbr.Partitions[i].Id[:], "")
-	}
-	return nil
-}
-
-func (mbr *MBR) Serialize(path string) error {
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			return
-		}
-	}(file)
-	// Write MBR
-	err = binary.Write(file, binary.LittleEndian, mbr)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (mbr *MBR) Deserialize(path string) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			return
-		}
-	}(file)
-	// Read MBR
-	buffer := make([]byte, 169)
-	_, err = file.Read(buffer)
-	if err != nil {
-		return err
-	}
-	reader := bytes.NewReader(buffer)
-	err = binary.Read(reader, binary.LittleEndian, mbr)
-	if err != nil {
-		return err
 	}
 	return nil
 }

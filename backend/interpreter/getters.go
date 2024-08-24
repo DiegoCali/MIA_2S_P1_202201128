@@ -86,11 +86,32 @@ func getPartition(options []Option) (int, string, string, string, string, string
 	return size, unit, path, typeP, fit, name, nil
 }
 
-func getRep(options []Option) (string, string, string, string, error) {
+func getMount(options []Option) (string, string, error) {
+	path := ""
+	name := ""
+	for _, option := range options {
+		switch option.Name {
+		case "path":
+			path = option.Value
+		case "name":
+			name = option.Value
+		default:
+			return "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
+		}
+	}
+	if path == "" {
+		return "\x00", "\x00", fmt.Errorf("missing -path option")
+	}
+	if name == "" {
+		return "\x00", "\x00", fmt.Errorf("missing -name option")
+	}
+	return path, name, nil
+}
+
+func getRep(options []Option) (string, string, string, error) {
 	id := ""
 	path := ""
 	name := ""
-	route := "/home/diego/Documents/report"
 	for _, option := range options {
 		switch option.Name {
 		case "id":
@@ -99,20 +120,18 @@ func getRep(options []Option) (string, string, string, string, error) {
 			path = option.Value
 		case "name":
 			name = option.Value
-		case "ruta":
-			route = option.Value
 		default:
-			return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
+			return "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
 		}
 	}
 	if id == "" {
-		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -id option")
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -id option")
 	}
 	if path == "" {
-		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -path option")
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -path option")
 	}
 	if name == "" {
-		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -name option")
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -name option")
 	}
-	return id, path, name, route, nil
+	return id, path, name, nil
 }

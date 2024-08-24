@@ -13,7 +13,7 @@ func FDisk(size int, unit string, path string, typeP string, fit string, name st
 	}
 	// Read the MBR
 	mbr := &structures.MBR{}
-	err = mbr.Deserialize(path)
+	err = utils.Deserialize(mbr, path, 0)
 	if err != nil {
 		return "Error: Coudn't read MBR", err
 	}
@@ -24,113 +24,21 @@ func FDisk(size int, unit string, path string, typeP string, fit string, name st
 	// Create partition
 	switch typeP {
 	case "P":
-		err = createPrimaryPartition(mbr, sizeBytes, fit, name)
+		// TODO: create primary partition
 	case "E":
-		err = createExtendedPartition(mbr, sizeBytes, fit, name, path)
+		// TODO: create extended partition
 	case "L":
-		err = createLogicalPartition(mbr, sizeBytes, fit, name, path)
+		// TODO: create logical partition
 	default:
 		return "Error: Partition type not recognized", nil
 	}
-	if err != nil {
-		return "Error: Coudn't create partition", err
-	}
 	// Serialize MBR
-	err = mbr.Serialize(path)
+	err = utils.Serialize(mbr, path, 0)
 	if err != nil {
 		return "Error: Coudn't serialize MBR", err
 	}
 	mbr.Print()
 	return "Partition created succesfully", nil
-}
-
-func createPrimaryPartition(mbr *structures.MBR, sizeBytes int, fit string, name string) error {
-	index, err := findEmptyPartition(mbr)
-	if err != nil {
-		return err
-	}
-	// Copy data to partition
-	mbr.Partitions[index].Status = 0
-	copy(mbr.Partitions[index].Type[:], "P")
-	copy(mbr.Partitions[index].Fit[:], fit)
-	mbr.Partitions[index].Start = getStartPartition(mbr, index)
-	mbr.Partitions[index].Size = int32(sizeBytes)
-	copy(mbr.Partitions[index].Name[:], name)
-	copy(mbr.Partitions[index].Id[:], "----")
-	// TODO: Create SuperBlocks and Inodes
-	// formula for number of structures: (sizeBytes - 76) / 298
-	return nil
-}
-
-func createExtendedPartition(mbr *structures.MBR, sizeBytes int, fit string, name string, path string) error {
-	_, exists := checkIfExtendedPartitionExists(mbr)
-	if exists {
-		return fmt.Errorf("error: Extended partition already exists")
-	}
-	index, err := findEmptyPartition(mbr)
-	if err != nil {
-		return err
-	}
-	// Copy data to partition
-	mbr.Partitions[index].Status = 0
-	copy(mbr.Partitions[index].Type[:], "E")
-	copy(mbr.Partitions[index].Fit[:], fit)
-	mbr.Partitions[index].Start = getStartPartition(mbr, index)
-	mbr.Partitions[index].Size = int32(sizeBytes)
-	copy(mbr.Partitions[index].Name[:], name)
-	copy(mbr.Partitions[index].Id[:], "----")
-	// Create EBR
-	ebr := &structures.EBR{}
-	err = ebr.Set(-1, "", mbr.Partitions[index].Start+33, -1, -1, "")
-	if err != nil {
-		return err
-	}
-	err = ebr.Serialize(path, int(mbr.Partitions[index].Start))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func createLogicalPartition(mbr *structures.MBR, sizeBytes int, fit string, name string, path string) error {
-	index, exists := checkIfExtendedPartitionExists(mbr)
-	if !exists {
-		return fmt.Errorf("error: Extended partition doesn't exist")
-	}
-	// Read EBR
-	offset, err := mbr.Partitions[index].GetLastEBR(path)
-	if err != nil {
-		return err
-	}
-	ebr := &structures.EBR{}
-	err = ebr.Deserialize(path, int(offset))
-	if err != nil {
-		return err
-	}
-	// Check if there is enough space
-	if ebr.Start+int32(sizeBytes)+33 > mbr.Partitions[index].Start+mbr.Partitions[index].Size {
-		return fmt.Errorf("error: Not enough space in extended partition")
-	}
-	// Set new data to EBR
-	err = ebr.Set(0, fit, ebr.Start, int32(sizeBytes), ebr.Start+int32(sizeBytes)+1, name)
-	if err != nil {
-		return err
-	}
-	err = ebr.Serialize(path, int(offset))
-	if err != nil {
-		return err
-	}
-	// Write next EBR
-	nextEbr := &structures.EBR{}
-	err = nextEbr.Set(-1, "", ebr.Start+int32(sizeBytes)+1, -1, -1, "")
-	if err != nil {
-		return err
-	}
-	err = nextEbr.Serialize(path, int(nextEbr.Start))
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func findEmptyPartition(mbr *structures.MBR) (int, error) {

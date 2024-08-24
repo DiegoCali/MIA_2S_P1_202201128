@@ -25,14 +25,14 @@ func (part *Partition) GetLastEBR(path string) (int32, error) {
 	}
 	// Read EBR
 	ebr := &EBR{}
-	err := ebr.Deserialize(path, int(offset))
+	err := utils.Deserialize(ebr, path, int(offset))
 	if err != nil {
 		return -1, err
 	}
 	// Get last EBR
 	for ebr.Next != -1 {
 		offset = ebr.Next
-		err = ebr.Deserialize(path, int(offset))
+		err = utils.Deserialize(ebr, path, int(offset))
 		if err != nil {
 			return -1, err
 		}

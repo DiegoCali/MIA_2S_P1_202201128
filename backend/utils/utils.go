@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -89,4 +91,63 @@ func CheckNull(str []byte) string {
 		output += string(str[i])
 	}
 	return output
+}
+
+func Serialize[T any](data *T, path string, offset int) error {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		return err
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			return
+		}
+	}(file)
+	// Seek to offset
+	_, err = file.Seek(int64(offset), 0)
+	if err != nil {
+		return err
+	}
+	// Write data
+	err = binary.Write(file, binary.LittleEndian, data)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func Deserialize[T any](data *T, path string, offset int) error {
+	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			return
+		}
+	}(file)
+	// Seek to offset
+	_, err = file.Seek(int64(offset), 0)
+	if err != nil {
+		return err
+	}
+	// Get size of data
+	size := binary.Size(data)
+	// Create buffer
+	buffer := make([]byte, size)
+	// Read data
+	_, err = file.Read(buffer)
+	if err != nil {
+		return err
+	}
+	// Create buffer reader
+	reader := bytes.NewReader(buffer)
+	// Deserialize data
+	err = binary.Read(reader, binary.LittleEndian, data)
+	if err != nil {
+		return err
+	}
+	return nil
 }

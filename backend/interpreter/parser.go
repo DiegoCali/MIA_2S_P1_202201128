@@ -115,12 +115,25 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
-		if instruction.command == "rep" {
-			id, path, name, route, err := getRep(instruction.options)
+		if instruction.command == "mount" {
+			path, name, err := getMount(instruction.options)
 			if err != nil {
 				return "Error reading options", err
 			}
-			message, err := cmds.Rep(id, path, name, route)
+			message, err := cmds.Mount(path, name)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
+		if instruction.command == "rep" {
+			id, path, name, err := getRep(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.Rep(id, path, name)
 			if err != nil {
 				return output, err
 			} else {

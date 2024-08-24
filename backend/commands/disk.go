@@ -14,10 +14,10 @@ func MkDisk(size int, fit string, unit string, path string) (string, error) {
 		return "Error: Coudn't create disk", err
 	}
 	// Today's date
-	timeFloat := time.Now().Unix()
+	timeInt := time.Now().Unix()
 	// Create MBR
 	mbr := &structures.MBR{}
-	err = mbr.Set(int32(sizeBytes), timeFloat, rand.Int31(), fit)
+	err = mbr.Set(int32(sizeBytes), timeInt, rand.Int31(), fit)
 	if err != nil {
 		return "Error: Coudn't create disk", err
 	}
@@ -27,7 +27,7 @@ func MkDisk(size int, fit string, unit string, path string) (string, error) {
 		return "Error: Coudn't create disk", err
 	}
 	// Serialize MBR
-	err = mbr.Serialize(path)
+	err = utils.Serialize(mbr, path, 0)
 	if err != nil {
 		return "Error: Coudn't serialize MBR", err
 	}

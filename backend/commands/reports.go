@@ -2,10 +2,17 @@ package commands
 
 import (
 	"backend/structures"
+	"backend/utils"
 	"fmt"
 )
 
-func Rep(id string, path string, name string, route string) (string, error) {
+func Rep(id string, path string, name string) (string, error) {
+	// Check if ID exists
+	route, exists := checkIfIDExists(id)
+	if !exists {
+		return "Error creating report", fmt.Errorf("ID %s does not exist", id)
+	}
+	// Generate report
 	switch name {
 	case "mbr":
 		err := generateMBRReport(path, route)
@@ -21,7 +28,7 @@ func Rep(id string, path string, name string, route string) (string, error) {
 func generateMBRReport(path string, route string) error {
 	// Read MBR
 	mbr := &structures.MBR{}
-	err := mbr.Deserialize(path)
+	err := utils.Deserialize(mbr, path, 0)
 	if err != nil {
 		return err
 	}
@@ -32,11 +39,10 @@ func generateMBRReport(path string, route string) error {
 	return nil
 }
 
-func checkIfIDExists(mbr *structures.MBR, id string) bool {
-	for _, partition := range mbr.Partitions {
-		if string(partition.Id[:]) == id {
-			return true
-		}
+func checkIfIDExists(id string) (string, bool) {
+	route := utils.GlobalMounts[id]
+	if route == "" {
+		return "", false
 	}
-	return false
+	return route, true
 }

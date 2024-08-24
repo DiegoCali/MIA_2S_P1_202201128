@@ -9,7 +9,7 @@ import (
 func Mount(path string, name string) (string, error) {
 	// read mbr in path
 	mbr := &structures.MBR{}
-	err := mbr.Deserialize(path)
+	err := utils.Deserialize(mbr, path, 0)
 	if err != nil {
 		return "Error: Coudn't read MBR", err
 	}
@@ -33,5 +33,5 @@ func GenerateId(index int, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return carnet + strconv.Itoa(index) + letter, nil
+	return carnet + strconv.Itoa(index) + letter, nil // "28" + "(index)" + "(diskLetter)"
 }
