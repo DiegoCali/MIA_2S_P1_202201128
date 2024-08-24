@@ -89,7 +89,9 @@ func (mbr *MBR) DotMbr(output string) error {
 
 func (mbr *MBR) GetPartitionIndex(name string) (int, error) {
 	for i := 0; i < 4; i++ {
-		if string(mbr.Partitions[i].Name[:]) == name {
+		// Remove null characters
+		partName := utils.CheckNull(mbr.Partitions[i].Name[:])
+		if partName == name {
 			return i, nil
 		}
 	}

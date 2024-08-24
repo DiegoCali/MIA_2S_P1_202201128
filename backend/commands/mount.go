@@ -3,6 +3,7 @@ package commands
 import (
 	"backend/structures"
 	"backend/utils"
+	"fmt"
 	"strconv"
 )
 
@@ -24,6 +25,7 @@ func Mount(path string, name string) (string, error) {
 	}
 	// Save partition id in memory
 	utils.GlobalMounts[id] = path
+	fmt.Println("Gloval mounts: ", utils.GlobalMounts)
 	return "Mounted succesfully!!", nil
 }
 

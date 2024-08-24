@@ -6,9 +6,9 @@ import (
 	"fmt"
 )
 
-func Rep(id string, path string, name string) (string, error) {
+func Rep(id string, route string, name string) (string, error) {
 	// Check if ID exists
-	route, exists := checkIfIDExists(id)
+	path, exists := checkIfIDExists(id)
 	if !exists {
 		return "Error creating report", fmt.Errorf("ID %s does not exist", id)
 	}
@@ -40,9 +40,9 @@ func generateMBRReport(path string, route string) error {
 }
 
 func checkIfIDExists(id string) (string, bool) {
-	route := utils.GlobalMounts[id]
-	if route == "" {
+	path, exists := utils.GlobalMounts[id]
+	if !exists {
 		return "", false
 	}
-	return route, true
+	return path, true
 }

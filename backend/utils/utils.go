@@ -70,7 +70,7 @@ var pathToLetter = make(map[string]string)
 var nextLetter = 0
 
 func GetLetter(path string) (string, error) {
-	if _, exists := pathToLetter[path]; exists {
+	if _, exists := pathToLetter[path]; !exists {
 		if nextLetter < len(alphabet) {
 			pathToLetter[path] = alphabet[nextLetter]
 			nextLetter++
