@@ -5,7 +5,6 @@ import (
 	"backend/utils"
 	"encoding/binary"
 	"fmt"
-	"strconv"
 	"time"
 )
 
@@ -23,34 +22,43 @@ func MkFS(id string, typeF string) (string, error) {
 		return "", err
 	}
 	// Get partition index from id
-	partIndex := int(id[2]) - 48 // Convert ASCII to int
-	// Get num of structures
-	freeSpace := int(mbr.Partitions[partIndex].Size) - binary.Size(structures.SuperBlock{})
-	numStructs := freeSpace / (1 + 3 + binary.Size(structures.Inode{}) + 3*binary.Size(structures.FBlock{}))
-	// type to int
-	typeInt, err := strconv.Atoi(typeF)
+	partIndex, err := mbr.GetPartitionId(id)
 	if err != nil {
 		return "", err
 	}
+	offset := mbr.Partitions[partIndex].Start
+	freeSpace := int(mbr.Partitions[partIndex].Size) - binary.Size(structures.SuperBlock{})
+	numStructs := freeSpace / (1 + 3 + binary.Size(structures.Inode{}) + 3*binary.Size(structures.FBlock{}))
+	// Calculate starts
+	// Inode bitmap start
+	inodeBitmapStart := offset + int32(binary.Size(structures.SuperBlock{}))
+	// Block bitmap start
+	blockBitmapStart := inodeBitmapStart + int32(numStructs)
+	// Inode start
+	inodeStart := blockBitmapStart + int32(3*numStructs)
+	// Block start
+	blockStart := inodeStart + int32(numStructs*binary.Size(structures.Inode{}))
+	// type to int
+	typeInt := 2
 	// Create superblock
 	superBlock := &structures.SuperBlock{
 		Type:            int32(typeInt),
-		InodesCount:     int32(numStructs),
-		BlocksCount:     int32(numStructs * 3),
+		InodesCount:     0,
+		BlocksCount:     0,
 		FreeBlocksCount: int32(numStructs * 3),
 		FreeInodesCount: int32(numStructs),
 		MTime:           time.Now().Unix(),
 		UMTime:          time.Now().Unix(),
-		MCount:          0,
+		MCount:          1,
 		Magic:           0xEF53,
 		InodeSize:       int32(binary.Size(structures.Inode{})),
 		BlockSize:       int32(binary.Size(structures.FBlock{})),
-		FirstInode:      int32(binary.Size(structures.SuperBlock{})),
-		FirstBlock:      int32(binary.Size(structures.SuperBlock{})) + int32(numStructs),
-		BMIndoeStart:    int32(binary.Size(structures.SuperBlock{})),
-		BMBlockStart:    int32(binary.Size(structures.SuperBlock{})) + int32(numStructs),
-		InodeStart:      int32(binary.Size(structures.SuperBlock{})) + int32(numStructs) + 3*int32(numStructs),
-		BlockStart:      int32(binary.Size(structures.SuperBlock{})) + int32(numStructs) + 3*int32(numStructs) + int32(numStructs*binary.Size(structures.Inode{})),
+		FirstInode:      inodeStart,
+		FirstBlock:      blockStart,
+		BMIndoeStart:    inodeBitmapStart,
+		BMBlockStart:    blockBitmapStart,
+		InodeStart:      inodeStart,
+		BlockStart:      blockStart,
 	}
 	// Serialize superblock
 	err = utils.Serialize(superBlock, path, int(mbr.Partitions[partIndex].Start))

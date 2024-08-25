@@ -97,3 +97,14 @@ func (mbr *MBR) GetPartitionIndex(name string) (int, error) {
 	}
 	return -1, fmt.Errorf("error: partition %s not found", name)
 }
+
+func (mbr *MBR) GetPartitionId(id string) (int, error) {
+	for i := 0; i < 4; i++ {
+		// Remove null characters
+		partId := utils.CheckNull(mbr.Partitions[i].Id[:])
+		if partId == id {
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("error: partition %s not found", id)
+}
