@@ -19,6 +19,11 @@ func Rep(id string, route string, name string) (string, error) {
 		if err != nil {
 			return "Error creating report", err
 		}
+	case "disk":
+		err := generateDiskReport(path, route)
+		if err != nil {
+			return "Error creating report", err
+		}
 	default:
 		return "Error creating report", fmt.Errorf("not implemented yet: %s", name)
 	}
@@ -35,7 +40,27 @@ func generateMBRReport(path string, route string) error {
 	// Generate report
 	mbr.Print()
 	// Generate dot file
-	err = mbr.DotMbr(route)
+	err = mbr.DotMbr(route, path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func generateDiskReport(path string, route string) error {
+	// Read MBR
+	mbr := &structures.MBR{}
+	err := utils.Deserialize(mbr, path, 0)
+	if err != nil {
+		return err
+	}
+	// Generate report
+	mbr.Print()
+	// Generate dot file
+	err = mbr.DotDisk(route, path)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

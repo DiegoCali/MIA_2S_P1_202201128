@@ -27,8 +27,9 @@ func Mount(path string, name string) (string, error) {
 	utils.GlobalMounts[id] = path
 	// Get partition correlative from GlobalMounts
 	correlative := len(utils.GlobalMounts)
-	// Save partition id in mbr and correlative
+	// Save partition id in mbr, update mount and correlative
 	copy(mbr.Partitions[index].Id[:], id)
+	mbr.Partitions[index].Status = 1
 	mbr.Partitions[index].Correlative = int32(correlative)
 	// Serialize mbr
 	err = utils.Serialize(mbr, path, 0)

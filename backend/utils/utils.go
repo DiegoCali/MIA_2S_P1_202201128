@@ -163,3 +163,16 @@ func PrintStruct[T any](data *T) error {
 	fmt.Println(string(jsonData))
 	return nil
 }
+
+func CleanPath(path string) string {
+	// Clean path from root and parent directories
+	// Loop string by char
+	newPath := ""
+	for i := 0; i < len(path); i++ {
+		// Slice string by char
+		if path[i] == '/' {
+			newPath = path[i:]
+		}
+	}
+	return newPath
+}

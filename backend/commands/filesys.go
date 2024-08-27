@@ -80,5 +80,10 @@ func MkFS(id string, typeF string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// Update superblock
+	err = utils.Serialize(superBlock, path, int(mbr.Partitions[partIndex].Start))
+	if err != nil {
+		return "", err
+	}
 	return "Partition formating to ext2 was successful...", nil
 }
