@@ -3,7 +3,6 @@ package structures
 import (
 	"backend/utils"
 	"fmt"
-	"os"
 	"strconv"
 )
 
@@ -78,14 +77,14 @@ func (mbr *MBR) GetPartitionId(id string) (int, error) {
 	return -1, fmt.Errorf("error: partition %s not found", id)
 }
 
-func getFreeSpace(mbr *MBR) int32 {
+func getFreeSpace(mbr *MBR) int {
 	freeSpace := mbr.Size - 169
 	for i := 0; i < 4; i++ {
 		if mbr.Partitions[i].Status != -1 {
 			freeSpace -= mbr.Partitions[i].Size
 		}
 	}
-	return freeSpace
+	return int(freeSpace)
 }
 
 func (mbr *MBR) DotMbr(output string, path string) error {
@@ -102,7 +101,7 @@ func (mbr *MBR) DotMbr(output string, path string) error {
 	}
 	strFile += "</TABLE>>];\n"
 	strFile += "}\n"
-	err := generateDot(output, strFile)
+	err := utils.GenerateDot(output, strFile)
 	if err != nil {
 		return err
 	}
@@ -112,6 +111,8 @@ func (mbr *MBR) DotMbr(output string, path string) error {
 func (mbr *MBR) DotDisk(output string, path string) error {
 	// cleaned path
 	cleanPath := utils.CleanPath(path)
+	// Disk size
+	diskSize := int(mbr.Size)
 	// Write Disk
 	strFile := "digraph Disk {\n"
 	// Label with Disk Name
@@ -130,29 +131,11 @@ func (mbr *MBR) DotDisk(output string, path string) error {
 	// Free Space
 	freeSpace := getFreeSpace(mbr)
 	if freeSpace > 0 {
-		strFile += "<TD>FREE</TD>\n"
+		strFile += "<TD>FREE\n" + strconv.Itoa(freeSpace/diskSize) + "</TD>\n"
 	}
 	strFile += "</TR></TABLE>>];\n"
 	strFile += "}\n"
-	err := generateDot(output, strFile)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func generateDot(output string, strFile string) error {
-	file, err := os.Create(output + ".dot")
-	if err != nil {
-		return err
-	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			return
-		}
-	}(file)
-	_, err = file.WriteString(strFile)
+	err := utils.GenerateDot(output, strFile)
 	if err != nil {
 		return err
 	}

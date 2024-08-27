@@ -24,6 +24,11 @@ func Rep(id string, route string, name string) (string, error) {
 		if err != nil {
 			return "Error creating report", err
 		}
+	case "sb":
+		err := generateSuperBlockReport(path, id, route)
+		if err != nil {
+			return "Error creating report", err
+		}
 	default:
 		return "Error creating report", fmt.Errorf("not implemented yet: %s", name)
 	}
@@ -58,6 +63,37 @@ func generateDiskReport(path string, route string) error {
 	mbr.Print()
 	// Generate dot file
 	err = mbr.DotDisk(route, path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func generateSuperBlockReport(path string, id string, route string) error {
+	// Read MBR
+	mbr := &structures.MBR{}
+	err := utils.Deserialize(mbr, path, 0)
+	if err != nil {
+		return err
+	}
+	partIndex, err := mbr.GetPartitionId(id)
+	if err != nil {
+		return err
+	}
+	offset := mbr.Partitions[partIndex].Start
+	// Read SuperBlock
+	spBlock := &structures.SuperBlock{}
+	err = utils.Deserialize(spBlock, path, int(offset))
+	if err != nil {
+		return err
+	}
+	// Generate report
+	err = utils.PrintStruct(spBlock)
+	if err != nil {
+		return err
+	}
+	// Generate dot file
+	err = spBlock.SuperBlockDot(route, path)
 	if err != nil {
 		return err
 	}

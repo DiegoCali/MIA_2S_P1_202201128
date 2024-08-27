@@ -2,6 +2,7 @@ package structures
 
 import (
 	"backend/utils"
+	"strconv"
 	"time"
 )
 
@@ -180,6 +181,37 @@ func (spBlock *SuperBlock) CreateUsers(path string) error {
 		return err
 	}
 	err = utils.PrintStruct(usersBlock)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (spBlock *SuperBlock) SuperBlockDot(output string, path string) error {
+	nameDisk := utils.CleanPath(path)
+	strFile := "digraph G {\n"
+	strFile += "node [shape=record]\n"
+	strFile += "superblock [label=<<TABLE>\n"
+	// SuperBlock
+	strFile += "<TR><TD>REPORT: SuperBlock</TD></TR>\n"
+	strFile += "<TR><TD>sb_name_hd</TD><TD>" + nameDisk + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_inodes_count</TD><TD>" + strconv.Itoa(int(spBlock.InodesCount)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_blocks_count</TD><TD>" + strconv.Itoa(int(spBlock.BlocksCount)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_free_blocks_count</TD><TD>" + strconv.Itoa(int(spBlock.FreeBlocksCount)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_free_inodes_count</TD><TD>" + strconv.Itoa(int(spBlock.FreeInodesCount)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_mtime</TD><TD>" + utils.Int64ToDate(spBlock.MTime) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_umtime</TD><TD>" + utils.Int64ToDate(spBlock.UMTime) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_mcount</TD><TD>" + strconv.Itoa(int(spBlock.MCount)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_size_struct_inode</TD><TD>" + strconv.Itoa(int(spBlock.InodeSize)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_size_struct_block</TD><TD>" + strconv.Itoa(int(spBlock.BlockSize)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_first_free_inode</TD><TD>" + strconv.Itoa(int(spBlock.FirstInode)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_first_free_block</TD><TD>" + strconv.Itoa(int(spBlock.FirstBlock)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_inode_start</TD><TD>" + strconv.Itoa(int(spBlock.InodeStart)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_block_start</TD><TD>" + strconv.Itoa(int(spBlock.BlockStart)) + "</TD></TR>\n"
+	strFile += "<TR><TD>sb_magic</TD><TD>" + strconv.Itoa(int(spBlock.Magic)) + "</TD></TR>\n"
+	strFile += "</TABLE>>];\n"
+	strFile += "}\n"
+	err := utils.GenerateDot(output, strFile)
 	if err != nil {
 		return err
 	}
