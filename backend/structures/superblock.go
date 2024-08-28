@@ -217,3 +217,29 @@ func (spBlock *SuperBlock) SuperBlockDot(output string, path string) error {
 	}
 	return nil
 }
+
+func (spBlock *SuperBlock) InodesDot(output string, path string) error {
+	strFile := "digraph G {\n"
+	strFile += "rankdir=LR;\n"
+	strFile += "node [shape=record]\n"
+	// Inodes
+	inode := &Inode{}
+	offset := int(spBlock.InodeStart)
+	for i := 0; i < int(spBlock.InodesCount); i++ {
+		err := utils.Deserialize(inode, path, offset)
+		if err != nil {
+			return err
+		}
+		strFile += inode.GetDotStr(i)
+		if i < int(spBlock.InodesCount)-1 {
+			strFile += "inode_" + strconv.Itoa(i) + " -> inode_" + strconv.Itoa(i+1) + "\n"
+		}
+		offset += int(spBlock.InodeSize)
+	}
+	strFile += "}\n"
+	err := utils.GenerateDot(output, strFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}
