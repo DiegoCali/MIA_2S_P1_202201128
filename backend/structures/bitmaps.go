@@ -1,6 +1,7 @@
 package structures
 
 import (
+	"backend/utils"
 	"encoding/binary"
 	"os"
 )
@@ -93,6 +94,66 @@ func (spBlock *SuperBlock) UpdateBitmapBlock(path string) error {
 	}
 	// Write '1' to the block bitmap
 	_, err = file.Write([]byte{'X'})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (spBlock *SuperBlock) BitmapInodeTxt(output string, path string, inode bool) error {
+	strFile := ""
+	// Get first inode or block in bitmap
+	firstStruct := 0
+	if inode {
+		firstStruct = int(spBlock.BMIndoeStart)
+	} else {
+		firstStruct = int(spBlock.BMBlockStart)
+	}
+	// Counter for the bitmap, lines
+	counter := 0
+	totalStructs := 0
+	if inode {
+		totalStructs = int(spBlock.InodesCount + spBlock.FreeInodesCount)
+	} else {
+		totalStructs = int(spBlock.BlocksCount + spBlock.FreeBlocksCount)
+	}
+	// Open file
+	file, err := os.OpenFile(path, os.O_RDONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			return
+		}
+	}(file)
+	// Write bitmap
+	for i := firstStruct; i < firstStruct+totalStructs; i++ {
+		if counter == 20 {
+			strFile += "\n"
+			counter = 0
+		}
+		// Seek offset
+		_, err = file.Seek(int64(i), 0)
+		if err != nil {
+			return err
+		}
+		// Read byte
+		buffer := make([]byte, 1)
+		_, err = file.Read(buffer)
+		if err != nil {
+			return err
+		}
+		if string(buffer) == "1" || string(buffer) == "X" {
+			strFile += "1"
+		} else {
+			strFile += "0"
+		}
+		counter++
+	}
+	// Write to file
+	err = utils.GenerateTxt(output, strFile)
 	if err != nil {
 		return err
 	}

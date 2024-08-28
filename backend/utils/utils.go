@@ -194,3 +194,21 @@ func GenerateDot(output string, strFile string) error {
 	}
 	return nil
 }
+
+func GenerateTxt(output string, strFile string) error {
+	file, err := os.Create(output + ".txt")
+	if err != nil {
+		return err
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			return
+		}
+	}(file)
+	_, err = file.WriteString(strFile)
+	if err != nil {
+		return err
+	}
+	return nil
+}

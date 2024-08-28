@@ -34,6 +34,16 @@ func Rep(id string, route string, name string) (string, error) {
 		if err != nil {
 			return "Error creating report", err
 		}
+	case "bm_inode":
+		err := generateBitmap(path, id, route, true)
+		if err != nil {
+			return "Error creating report", err
+		}
+	case "bm_block":
+		err := generateBitmap(path, id, route, false)
+		if err != nil {
+			return "Error creating report", err
+		}
 	default:
 		return "Error creating report", fmt.Errorf("not implemented yet: %s", name)
 	}
@@ -125,6 +135,32 @@ func generateInodesReport(path string, id string, route string) error {
 	}
 	// Generate dot file
 	err = spBlock.InodesDot(route, path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func generateBitmap(path string, id string, route string, inode bool) error {
+	// Read MBR
+	mbr := &structures.MBR{}
+	err := utils.Deserialize(mbr, path, 0)
+	if err != nil {
+		return err
+	}
+	partIndex, err := mbr.GetPartitionId(id)
+	if err != nil {
+		return err
+	}
+	offset := mbr.Partitions[partIndex].Start
+	// Read SuperBlock
+	spBlock := &structures.SuperBlock{}
+	err = utils.Deserialize(spBlock, path, int(offset))
+	if err != nil {
+		return err
+	}
+	// Generate bitmap
+	err = spBlock.BitmapInodeTxt(route, path, inode)
 	if err != nil {
 		return err
 	}
