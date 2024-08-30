@@ -141,6 +141,32 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
+		if instruction.command == "cat" {
+			files, err := getCat(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.Cat(files)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
+		if instruction.command == "login" {
+			name, pass, id, err := getLogin(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.Login(name, pass, id)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)
 			if err != nil {

@@ -154,3 +154,43 @@ func getFileSys(options []Option) (string, string, error) {
 	}
 	return id, typeF, nil
 }
+
+func getCat(options []Option) ([]string, error) {
+	files := make([]string, 0)
+	for _, option := range options {
+		if option.Name == "file" {
+			files = append(files, option.Value)
+		} else {
+			return nil, fmt.Errorf("invalid option %s", option.Name)
+		}
+	}
+	return files, nil
+}
+
+func getLogin(option []Option) (string, string, string, error) {
+	user := ""
+	password := ""
+	id := ""
+	for _, opt := range option {
+		switch opt.Name {
+		case "user":
+			user = opt.Value
+		case "pass":
+			password = opt.Value
+		case "id":
+			id = opt.Value
+		default:
+			return "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", opt.Name)
+		}
+	}
+	if user == "" {
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -user option")
+	}
+	if password == "" {
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -pass option")
+	}
+	if id == "" {
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -id option")
+	}
+	return user, password, id, nil
+}
