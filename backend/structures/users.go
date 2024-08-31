@@ -29,7 +29,7 @@ func (spBlock *SuperBlock) ValidateUser(name string, pass string, path string) (
 	for i := 0; i < len(lines); i++ {
 		// Get fields
 		fields := strings.Split(lines[i], ",")
-		// Check if user exists
+		// Check if user exists and password is correct
 		if fields[1] == "U" && fields[2] == name && fields[3] == pass {
 			return true, nil
 		}

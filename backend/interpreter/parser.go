@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	cmds "backend/commands"
+	"backend/utils"
 	"fmt"
 )
 
@@ -41,9 +42,15 @@ func readCommand(tokens []Token, pos int) (Instruction, int, error) {
 	var instruction Instruction
 	instruction.command = tokens[pos].value
 	pos++
+	// Check if there are options or not
 	if tokens[pos].kind != "OPTION" {
+		if tokens[pos].kind == "TERMINATOR" {
+			pos++
+			return instruction, pos, nil
+		}
 		return instruction, pos, fmt.Errorf("expected OPTION, got %s", tokens[pos].kind)
 	}
+	// Read options
 	for tokens[pos].kind == "OPTION" {
 		option, newPos, err := readOption(tokens, pos)
 		if err != nil {
@@ -166,6 +173,15 @@ func Execute(root Stack) (string, error) {
 				output += message + "\n"
 			}
 			continue
+		}
+		if instruction.command == "logout" {
+			userName := utils.ActualUser.GetName()
+			userId := utils.ActualUser.GetId()
+			if userName == "" || userId == "" {
+				return "Error logging out", fmt.Errorf("no user logged in")
+			}
+			utils.ActualUser.Set("", "")
+			output += "Logged out from: [" + userName + "] successfully\n"
 		}
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)
