@@ -182,6 +182,20 @@ func Execute(root Stack) (string, error) {
 			}
 			utils.ActualUser.Set("", "")
 			output += "Logged out from: [" + userName + "] successfully\n"
+			continue
+		}
+		if instruction.command == "mkgrp" {
+			name, err := getMkGroup(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.MkGroup(name)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
 		}
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)

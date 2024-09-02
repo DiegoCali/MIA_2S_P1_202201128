@@ -194,3 +194,18 @@ func getLogin(option []Option) (string, string, string, error) {
 	}
 	return user, password, id, nil
 }
+
+func getMkGroup(options []Option) (string, error) {
+	name := ""
+	for _, option := range options {
+		if option.Name == "name" {
+			name = option.Value
+		} else {
+			return "\x00", fmt.Errorf("invalid option %s", option.Name)
+		}
+	}
+	if name == "" {
+		return "\x00", fmt.Errorf("missing -name option")
+	}
+	return name, nil
+}

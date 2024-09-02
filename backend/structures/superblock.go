@@ -243,3 +243,32 @@ func (spBlock *SuperBlock) InodesDot(output string, path string) error {
 	}
 	return nil
 }
+
+func (spBlock *SuperBlock) CreateFBlock(content string, path string) (int32, error) {
+	// Create new FBlock
+	fBlock := &FBlock{}
+	copy(fBlock.Content[:], content)
+	// Serialize FBlock
+	offset := int(spBlock.FirstBlock)
+	err := utils.Serialize(fBlock, path, offset)
+	if err != nil {
+		return -1, err
+	}
+	// Update bitmap
+	err = spBlock.UpdateBitmapBlock(path)
+	if err != nil {
+		return -1, err
+	}
+	// Block id
+	blockID := spBlock.BlocksCount
+	// Update superblock
+	spBlock.FreeBlocksCount--
+	spBlock.BlocksCount++
+	spBlock.FirstBlock += spBlock.BlockSize
+	// Serialize SuperBlock
+	err = utils.Serialize(spBlock, path, int(spBlock.BMIndoeStart-76))
+	if err != nil {
+		return -1, err
+	}
+	return blockID, nil
+}
