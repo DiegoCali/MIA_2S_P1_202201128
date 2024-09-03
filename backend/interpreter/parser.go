@@ -210,6 +210,32 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
+		if instruction.command == "mkusr" {
+			user, pass, group, err := getMkUser(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.MkUsr(user, pass, group)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
+		if instruction.command == "rmusr" {
+			user, err := getRmUser(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.RmUsr(user)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)
 			if err != nil {

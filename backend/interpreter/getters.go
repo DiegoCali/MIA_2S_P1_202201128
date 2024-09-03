@@ -224,3 +224,46 @@ func getRmGroup(option []Option) (string, error) {
 	}
 	return name, nil
 }
+
+func getMkUser(option []Option) (string, string, string, error) {
+	user := ""
+	password := ""
+	group := ""
+	for _, opt := range option {
+		switch opt.Name {
+		case "user":
+			user = opt.Value
+		case "pass":
+			password = opt.Value
+		case "grp":
+			group = opt.Value
+		default:
+			return "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", opt.Name)
+		}
+	}
+	if user == "" {
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -user option")
+	}
+	if password == "" {
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -pass option")
+	}
+	if group == "" {
+		return "\x00", "\x00", "\x00", fmt.Errorf("missing -group option")
+	}
+	return user, password, group, nil
+}
+
+func getRmUser(option []Option) (string, error) {
+	user := ""
+	for _, opt := range option {
+		if opt.Name == "user" {
+			user = opt.Value
+		} else {
+			return "\x00", fmt.Errorf("invalid option %s", opt.Name)
+		}
+	}
+	if user == "" {
+		return "\x00", fmt.Errorf("missing -user option")
+	}
+	return user, nil
+}
