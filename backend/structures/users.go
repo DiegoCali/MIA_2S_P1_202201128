@@ -74,6 +74,35 @@ func (spBlock *SuperBlock) CreateGroup(name string, path string) error {
 	return nil
 }
 
+func (spBlock *SuperBlock) RemoveGroup(name string, path string) error {
+	inode, err := spBlock.getUsersInode(path)
+	if err != nil {
+		return err
+	}
+	fullString, err := spBlock.getInodeContent(inode, path)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(fullString, "\n")
+	newString := ""
+	// To remove a group, we need to only chance the first number of the line to 0, fields[0] = 0
+	for i := 0; i < len(lines); i++ {
+		fields := strings.Split(lines[i], ",")
+		if len(fields) < 3 {
+			break
+		}
+		if fields[1] == "G" && fields[2] == name {
+			fields[0] = "0"
+		}
+		newString += strings.Join(fields, ",") + "\n"
+	}
+	err = spBlock.writeInode(inode, path, newString, int(spBlock.InodeStart+100)) // first inode is root, +100 is users.txt
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (spBlock *SuperBlock) getUsersInode(path string) (*Inode, error) {
 	inode := &Inode{}
 	err := utils.Deserialize(inode, path, int(spBlock.InodeStart+100)) // first inode is root, +100 is users.txt

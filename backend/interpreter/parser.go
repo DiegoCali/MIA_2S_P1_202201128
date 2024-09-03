@@ -197,6 +197,19 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
+		if instruction.command == "rmgrp" {
+			name, err := getRmGroup(instruction.options)
+			if err != nil {
+				return "Error reading options", err
+			}
+			message, err := cmds.RmGroup(name)
+			if err != nil {
+				return output, err
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)
 			if err != nil {

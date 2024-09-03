@@ -209,3 +209,18 @@ func getMkGroup(options []Option) (string, error) {
 	}
 	return name, nil
 }
+
+func getRmGroup(option []Option) (string, error) {
+	name := ""
+	for _, opt := range option {
+		if opt.Name == "name" {
+			name = opt.Value
+		} else {
+			return "\x00", fmt.Errorf("invalid option %s", opt.Name)
+		}
+	}
+	if name == "" {
+		return "\x00", fmt.Errorf("missing -name option")
+	}
+	return name, nil
+}
