@@ -8,6 +8,14 @@ import (
 	"net/http"
 )
 
+type ExecuteRequest struct {
+	Code string `json:"code" binding:"required"`
+}
+
+type ExecuteResponse struct {
+	Received string `json:"received"`
+}
+
 func main() {
 	router := gin.Default()
 	router.Use(cors.Default())
@@ -17,7 +25,15 @@ func main() {
 		})
 	})
 	router.POST("/run-code", func(c *gin.Context) {
-		code := c.PostForm("code")
+		var req ExecuteRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		code := req.Code
+		fmt.Println("Received code:", code)
 		tokens, err := interpreter.Lex(code)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
@@ -39,8 +55,8 @@ func main() {
 			})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"received": output,
+		c.JSON(http.StatusOK, ExecuteResponse{
+			Received: output,
 		})
 	})
 	fmt.Println("Server running http://localhost:8080")

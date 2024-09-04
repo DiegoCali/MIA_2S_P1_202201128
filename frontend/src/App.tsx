@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import {createTheme, ThemeProvider} from "@mui/material";
 import {useRef, useState} from "react";
 import './App.css'
+import {POST} from "./Post.ts";
 
 const darkTheme = createTheme({
     palette: {
@@ -34,12 +35,16 @@ function App() {
         editorRef.current = editor;
     }
 
-    function addText(){
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "http://localhost:8080/run-code");
+    function sendText(){
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-expect-error
-        xhr.send(JSON.stringify({"code": editorRef.current.getValue()}));
+        const dataToSend = {code: editorRef.current.getValue()}
+        POST("http://localhost:8080/run-code", dataToSend).then((result) => {
+            const output = document.getElementById("Console");
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            output.value = result.received;
+        });
     }
 
   return (
@@ -60,7 +65,7 @@ function App() {
               <Stack spacing={2} direction="row">
                   <input onChange={ (e) => {setFile(e.target.files[0])}} type="file"/>
                   <Button variant="outlined" onClick={openFile}>Open File</Button>
-                  <Button variant="outlined" onClick={addText}>Run</Button>
+                  <Button variant="outlined" onClick={sendText}>Run</Button>
               </Stack>
               <textarea
                   id="Console"

@@ -26,6 +26,10 @@ func Parse(tokens []Token) (Stack, error) {
 	pos := 0
 	for pos < len(tokens) {
 		if tokens[pos].kind != "COMMAND" {
+			if tokens[pos].kind == "TERMINATOR" {
+				pos++
+				continue
+			}
 			return root, fmt.Errorf("expected COMMAND, got %s", tokens[pos].kind)
 		}
 		instruction, newPos, err := readCommand(tokens, pos)
