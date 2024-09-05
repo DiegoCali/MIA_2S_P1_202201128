@@ -267,3 +267,25 @@ func getRmUser(option []Option) (string, error) {
 	}
 	return user, nil
 }
+
+func getChgrp(option []Option) (string, string, error) {
+	user := ""
+	group := ""
+	for _, opt := range option {
+		switch opt.Name {
+		case "user":
+			user = opt.Value
+		case "grp":
+			group = opt.Value
+		default:
+			return "\x00", "\x00", fmt.Errorf("invalid option %s", opt.Name)
+		}
+	}
+	if user == "" {
+		return "\x00", "\x00", fmt.Errorf("missing -usr option")
+	}
+	if group == "" {
+		return "\x00", "\x00", fmt.Errorf("missing -grp option")
+	}
+	return user, group, nil
+}

@@ -63,6 +63,40 @@ func (spBlock *SuperBlock) ValidateGroup(name string, path string) (bool, error)
 	return false, nil
 }
 
+func (spBlock *SuperBlock) ChangeGroup(name string, group string, path string) error {
+	inode, err := spBlock.getUsersInode(path)
+	if err != nil {
+		return err
+	}
+	fullString, err := spBlock.getInodeContent(inode, path)
+	if err != nil {
+		return err
+	}
+	lines := strings.Split(fullString, "\n")
+	newString := ""
+	for i := 0; i < len(lines); i++ {
+		fields := strings.Split(lines[i], ",")
+		if len(fields) < 3 {
+			break
+		}
+		if fields[0] == "0" {
+			newString += strings.Join(fields, ",") + "\n"
+			continue
+		}
+		if fields[1] == "U" && fields[2] == name {
+			fmt.Println("Changing group to group: ", group)
+			fields[3] = group
+		}
+		newString += strings.Join(fields, ",") + "\n"
+	}
+	fmt.Println(newString)
+	err = spBlock.writeInode(inode, path, newString, int(spBlock.InodeStart+100)) // first inode is root, +100 is users.txt
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (spBlock *SuperBlock) CreateGroup(name string, path string) error {
 	// Validate length of name
 	if len(name) > 10 {
@@ -125,6 +159,7 @@ func (spBlock *SuperBlock) RemoveGroup(name string, path string) error {
 			break
 		}
 		if fields[0] == "0" {
+			newString += strings.Join(fields, ",") + "\n"
 			continue
 		}
 		if fields[1] == "G" && fields[2] == name {
@@ -157,6 +192,7 @@ func (spBlock *SuperBlock) RemoveUser(name string, path string) error {
 			break
 		}
 		if fields[0] == "0" {
+			newString += strings.Join(fields, ",") + "\n"
 			continue
 		}
 		if fields[1] == "U" && fields[2] == name {
