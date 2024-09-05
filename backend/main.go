@@ -27,8 +27,8 @@ func main() {
 	router.POST("/run-code", func(c *gin.Context) {
 		var req ExecuteRequest
 		if err := c.BindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
+			c.JSON(http.StatusBadRequest, ExecuteResponse{
+				Received: err.Error(),
 			})
 			return
 		}
@@ -36,22 +36,22 @@ func main() {
 		fmt.Println("Received code:", code)
 		tokens, err := interpreter.Lex(code)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
+			c.JSON(http.StatusBadRequest, ExecuteResponse{
+				Received: err.Error(),
 			})
 			return
 		}
 		stack, err := interpreter.Parse(tokens)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
+			c.JSON(http.StatusBadRequest, ExecuteResponse{
+				Received: err.Error(),
 			})
 			return
 		}
 		output, err := interpreter.Execute(stack)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
+			c.JSON(http.StatusBadRequest, ExecuteResponse{
+				Received: err.Error(),
 			})
 			return
 		}

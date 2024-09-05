@@ -36,8 +36,8 @@ func Mount(path string, name string) (string, error) {
 	if err != nil {
 		return "Error: Coudn't write MBR", err
 	}
-	fmt.Println("Gloval mounts: ", utils.GlobalMounts)
-	return "Mounted succesfully!!", nil
+
+	return "Mounted succesfully!! Global mounts: " + fmt.Sprint(utils.GlobalMounts), nil
 }
 
 func GenerateId(index int, path string) (string, error) {
