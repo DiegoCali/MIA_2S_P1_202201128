@@ -30,9 +30,6 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, err
 		fmt.Println("Searching for: ", pathFile[i])
 		namePath := pathFile[i]
 		// Check if inode is directory, if not is because it is a file
-		if inode.Type[0] != '0' {
-			break
-		}
 		// Loop through inode blocks
 		for j := 0; j < len(inode.Block); j++ {
 			// Get DBlock
@@ -64,9 +61,6 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, err
 				}
 			}
 		}
-	}
-	if inode.Type[0] == '0' {
-		return nil, fmt.Errorf("file: " + strings.Join(pathFile, "/") + "not found")
 	}
 	return inode, nil
 }
