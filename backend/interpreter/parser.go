@@ -90,11 +90,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "mkdisk" {
 			size, fit, unit, path, err := getDisk(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.MkDisk(size, fit, unit, path)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -103,11 +103,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "rmdisk" {
 			path, err := getRDisk(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.RmDisk(path)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -116,11 +116,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "fdisk" {
 			size, unit, path, typeP, fit, name, err := getPartition(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.FDisk(size, unit, path, typeP, fit, name)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -129,11 +129,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "mount" {
 			path, name, err := getMount(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.Mount(path, name)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -142,11 +142,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "mkfs" {
 			id, typeF, err := getFileSys(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.MkFS(id, typeF)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -155,11 +155,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "cat" {
 			files, err := getCat(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.Cat(files)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -168,11 +168,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "login" {
 			name, pass, id, err := getLogin(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.Login(name, pass, id)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -182,7 +182,7 @@ func Execute(root Stack) (string, error) {
 			userName := utils.ActualUser.GetName()
 			userId := utils.ActualUser.GetId()
 			if userName == "" || userId == "" {
-				return "Error logging out", fmt.Errorf("no user logged in")
+				output += "Error: User is not logged in" + "\n"
 			}
 			utils.ActualUser.Set("", "")
 			output += "Logged out from: [" + userName + "] successfully\n"
@@ -191,11 +191,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "mkgrp" {
 			name, err := getMkGroup(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.MkGroup(name)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -204,11 +204,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "rmgrp" {
 			name, err := getRmGroup(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.RmGroup(name)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -217,11 +217,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "mkusr" {
 			user, pass, group, err := getMkUser(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.MkUsr(user, pass, group)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -230,11 +230,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "rmusr" {
 			user, err := getRmUser(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.RmUsr(user)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -243,11 +243,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "chgrp" {
 			user, group, err := getChgrp(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.Chgrp(user, group)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
@@ -256,11 +256,11 @@ func Execute(root Stack) (string, error) {
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)
 			if err != nil {
-				return "Error reading options", err
+				output += err.Error() + "\n"
 			}
 			message, err := cmds.Rep(id, route, name)
 			if err != nil {
-				return output, err
+				output += err.Error() + "\n"
 			} else {
 				output += message + "\n"
 			}
