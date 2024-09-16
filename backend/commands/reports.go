@@ -4,9 +4,10 @@ import (
 	"backend/structures"
 	"backend/utils"
 	"fmt"
+	"strings"
 )
 
-func Rep(id string, route string, name string) (string, error) {
+func Rep(id string, route string, name string, pathLs string) (string, error) {
 	// Check if ID exists
 	path, exists := checkIfIDExists(id)
 	if !exists {
@@ -41,6 +42,11 @@ func Rep(id string, route string, name string) (string, error) {
 		}
 	case "bm_block":
 		err := generateBitmap(path, id, route, false)
+		if err != nil {
+			return "Error creating report", err
+		}
+	case "ls":
+		err := generateLsReport(path, id, route, pathLs)
 		if err != nil {
 			return "Error creating report", err
 		}
@@ -164,6 +170,48 @@ func generateBitmap(path string, id string, route string, inode bool) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+func generateLsReport(path string, id string, route string, pathLs string) error {
+	// Read MBR
+	mbr := &structures.MBR{}
+	err := utils.Deserialize(mbr, path, 0)
+	if err != nil {
+		return err
+	}
+	partIndex, err := mbr.GetPartitionId(id)
+	if err != nil {
+		return err
+	}
+	offset := mbr.Partitions[partIndex].Start
+	// Read SuperBlock
+	spBlock := &structures.SuperBlock{}
+	err = utils.Deserialize(spBlock, path, int(offset))
+	if err != nil {
+		return err
+	}
+	pathLsTokens := strings.Split(pathLs, "/")
+	if pathLsTokens[0] == "" {
+		pathLsTokens = pathLsTokens[1:]
+	}
+	// Generate LS string
+	lsHtml, err := spBlock.LsReport(pathLsTokens, path)
+	if err != nil {
+		return err
+	}
+	// dot string
+	dotStr := "digraph G {\n"
+	dotStr += "rankdir=LR;\n"
+	dotStr += "node [shape=record, label="
+	dotStr += lsHtml
+	dotStr += "];\n"
+	dotStr += "}\n"
+	// Generate file .dot with a node with a label with the lsHtml
+	err = utils.GenerateDot(route, dotStr)
+	if err != nil {
+		return err
+	}
+	fmt.Println(dotStr)
 	return nil
 }
 

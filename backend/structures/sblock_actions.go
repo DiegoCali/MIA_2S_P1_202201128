@@ -7,7 +7,25 @@ import (
 	"time"
 )
 
-func (spBlock *SuperBlock) CreatePath(parents []string, isFile bool, inode *Inode, dir int32, dirParent int32, path string, offset int32) error {
+func (spBlock *SuperBlock) CreatePath(parents []string, isFile bool, inode *Inode, dir int32, dirParent int32, path string, offset int32, create bool) error {
+	fmt.Println("Create parents?", create)
+	if !create {
+		// As we are not creating, we only need search the prev last inode
+		nameInode := make([]string, 0)
+		nameInode = append(nameInode, parents[len(parents)-1])
+		parents = parents[:len(parents)-1]
+		fmt.Println("Creating: ", nameInode, ", With parents: ", parents)
+		lastInode, inodeRef, err := spBlock.getInode(parents, path)
+		if err != nil {
+			return err
+		}
+		fmt.Println("Last Inode: ", lastInode)
+		err = spBlock.CreatePath(nameInode, isFile, lastInode, dir, dirParent, path, inodeRef, true)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	// First iteration is inode as root
 	// Create first parent, we need to get first aviailable block from root inode
 	dirBlock, blockRef, index, err := inode.GetAvailableBlock(spBlock.BlockStart, path)
@@ -62,12 +80,12 @@ func (spBlock *SuperBlock) CreatePath(parents []string, isFile bool, inode *Inod
 	// Create the rest of the parents, recursively
 	newParents := parents[1:]
 	if len(newParents) > 1 {
-		err = spBlock.CreatePath(newParents, false, newInode, inodeRef, dir, path, inodeRef)
+		err = spBlock.CreatePath(newParents, false, newInode, inodeRef, dir, path, inodeRef, true)
 		if err != nil {
 			return err
 		}
 	} else if len(newParents) == 1 {
-		err = spBlock.CreatePath(newParents, isFile, newInode, inodeRef, dir, path, inodeRef)
+		err = spBlock.CreatePath(newParents, isFile, newInode, inodeRef, dir, path, inodeRef, true)
 		if err != nil {
 			return err
 		}
@@ -221,7 +239,9 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, int
 				// Ass block has 4 contents and the first two are parents
 				// You only need to check the last 2
 				firstContent := block.Content[2]
+				fmt.Println("Comparing to:", utils.CheckNull(firstContent.Name[:]))
 				if namePath == utils.CheckNull(firstContent.Name[:]) {
+					fmt.Println("Found")
 					// Replace inode
 					err := utils.Deserialize(inode, path, int(spBlock.InodeStart+firstContent.BInode*spBlock.InodeSize))
 					if err != nil {
@@ -231,7 +251,9 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, int
 					break
 				}
 				secondContent := block.Content[3]
+				fmt.Println("Comparing to:", utils.CheckNull(secondContent.Name[:]))
 				if namePath == utils.CheckNull(secondContent.Name[:]) {
+					fmt.Println("Found")
 					// Replace inode
 					err := utils.Deserialize(inode, path, int(spBlock.InodeStart+secondContent.BInode*spBlock.InodeSize))
 					if err != nil {
@@ -259,6 +281,27 @@ func (spBlock *SuperBlock) getInodeContent(inode *Inode, path string) (string, e
 		}
 	}
 	return fullString, nil
+}
+
+func (spBlock *SuperBlock) getInodeDirs(inode *Inode, path string) ([]string, error) {
+	dirs := make([]string, 0)
+	for i := 0; i < len(inode.Block); i++ {
+		if inode.Block[i] != -1 {
+			fmt.Println("Block: ", inode.Block[i])
+			block := &DBlock{}
+			err := utils.Deserialize(block, path, int(spBlock.BlockStart+inode.Block[i]*spBlock.BlockSize))
+			if err != nil {
+				return nil, err
+			}
+			for j := 2; j < 4; j++ {
+				if block.Content[j].BInode != -1 {
+					fmt.Println("Appending: ", utils.CheckNull(block.Content[j].Name[:]))
+					dirs = append(dirs, utils.CheckNull(block.Content[j].Name[:]))
+				}
+			}
+		}
+	}
+	return dirs, nil
 }
 
 func (spBlock *SuperBlock) writeInode(inode *Inode, path string, content string, offset int) error {
@@ -312,4 +355,26 @@ func (spBlock *SuperBlock) writeInode(inode *Inode, path string, content string,
 		return err
 	}
 	return nil
+}
+
+func (spBlock *SuperBlock) LsReport(pathFile []string, path string) (string, error) {
+	inode, _, err := spBlock.getInode(pathFile, path)
+	if err != nil {
+		return "File not found", err
+	}
+	fullString := "<<TABLE>\n"
+	dirs, err := spBlock.getInodeDirs(inode, path)
+	if err != nil {
+		return "Error getting inode content", err
+	}
+	fmt.Println(dirs)
+	fullString += "<TR><TH>NAME</TH><TH>TYPE</TH></TR>\n"
+	for i := 0; i < len(dirs); i++ {
+		if strings.ContainsRune(dirs[i], '.') {
+			fullString += "<TR><TD>" + dirs[i] + "</TD><TD>File</TD></TR>\n"
+			continue
+		}
+		fullString += "<TR><TD>" + dirs[i] + "</TD><TD>Directory</TD></TR>\n"
+	}
+	return fullString, nil
 }

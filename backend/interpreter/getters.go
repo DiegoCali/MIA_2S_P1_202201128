@@ -108,10 +108,11 @@ func getMount(options []Option) (string, string, error) {
 	return path, name, nil
 }
 
-func getRep(options []Option) (string, string, string, error) {
+func getRep(options []Option) (string, string, string, string, error) {
 	id := ""
 	path := ""
 	name := ""
+	route := ""
 	for _, option := range options {
 		switch option.Name {
 		case "id":
@@ -120,20 +121,22 @@ func getRep(options []Option) (string, string, string, error) {
 			path = option.Value
 		case "name":
 			name = option.Value
+		case "route":
+			route = option.Value
 		default:
-			return "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
+			return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("invalid option %s", option.Name)
 		}
 	}
 	if id == "" {
-		return "\x00", "\x00", "\x00", fmt.Errorf("missing -id option")
+		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -id option")
 	}
 	if path == "" {
-		return "\x00", "\x00", "\x00", fmt.Errorf("missing -path option")
+		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -path option")
 	}
 	if name == "" {
-		return "\x00", "\x00", "\x00", fmt.Errorf("missing -name option")
+		return "\x00", "\x00", "\x00", "\x00", fmt.Errorf("missing -name option")
 	}
-	return id, path, name, nil
+	return id, path, name, route, nil
 }
 
 func getFileSys(options []Option) (string, string, error) {

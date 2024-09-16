@@ -26,7 +26,7 @@ func MkFile(path string, parent bool, size int, cont string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = sb.CreatePath(pathList, true, inode, 0, 0, pathF, 0)
+	err = sb.CreatePath(pathList, true, inode, 0, 0, pathF, 0, parent)
 	if err != nil {
 		return "", err
 	}

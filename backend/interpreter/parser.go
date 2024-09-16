@@ -280,11 +280,11 @@ func Execute(root Stack) (string, error) {
 			continue
 		}
 		if instruction.command == "rep" {
-			id, route, name, err := getRep(instruction.options)
+			id, route, name, pathLs, err := getRep(instruction.options)
 			if err != nil {
 				output += err.Error() + "\n"
 			}
-			message, err := cmds.Rep(id, route, name)
+			message, err := cmds.Rep(id, route, name, pathLs)
 			if err != nil {
 				output += err.Error() + "\n"
 			} else {
