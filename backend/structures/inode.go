@@ -69,6 +69,7 @@ func (inode *Inode) GetAvailableBlock(offset int32, path string) (*DBlock, int32
 				{Name: [12]byte{'-'}, BInode: -1},
 			},
 		}
+		fmt.Println("Created new block")
 		// If we created a new block, we need to send -1 as the block number
 		return newBlock, -1, i, nil
 	}

@@ -17,11 +17,19 @@ func (spBlock *SuperBlock) CreatePath(parents []string, isFile bool, inode *Inod
 	if blockRef == -1 {
 		// means a new block was created, so we need to update inode and superblock
 		inode.Block[index] = spBlock.BlocksCount
+		blockRef = spBlock.BlocksCount
 		inode.Mtime = time.Now().Unix()
 		err = spBlock.UpdateBitmapBlock(path)
 		if err != nil {
 			return err
 		}
+		// Serialize block
+		fmt.Println("Comparing: ", spBlock.FirstBlock, ", And, ", spBlock.BlockStart+blockRef*spBlock.BlockSize)
+		err = utils.Serialize(dirBlock, path, int(spBlock.FirstBlock))
+		if err != nil {
+			return err
+		}
+		// Update superblock
 		spBlock.FreeBlocksCount--
 		spBlock.BlocksCount++
 		spBlock.FirstBlock += spBlock.BlockSize
@@ -76,6 +84,7 @@ func (spBlock *SuperBlock) FillFile(pathF []string, size int, cont []string, pat
 	if err != nil {
 		return err
 	}
+	fmt.Println("Inode: ", inode.Type)
 	contStr := ""
 	if len(cont) > 0 {
 		inode, _, err = spBlock.getInode(cont, path)
@@ -224,7 +233,7 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, int
 				secondContent := block.Content[3]
 				if namePath == utils.CheckNull(secondContent.Name[:]) {
 					// Replace inode
-					err := utils.Deserialize(inode, path, int(spBlock.InodeStart+firstContent.BInode*spBlock.InodeSize))
+					err := utils.Deserialize(inode, path, int(spBlock.InodeStart+secondContent.BInode*spBlock.InodeSize))
 					if err != nil {
 						return nil, -1, err
 					}
