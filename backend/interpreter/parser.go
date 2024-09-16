@@ -253,6 +253,32 @@ func Execute(root Stack) (string, error) {
 			}
 			continue
 		}
+		if instruction.command == "mkfile" {
+			path, parent, size, cont, err := getMkFile(instruction.options)
+			if err != nil {
+				output += err.Error() + "\n"
+			}
+			message, err := cmds.MkFile(path, parent, size, cont)
+			if err != nil {
+				output += err.Error() + "\n"
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
+		if instruction.command == "mkdir" {
+			path, parent, err := getMkDir(instruction.options)
+			if err != nil {
+				output += err.Error() + "\n"
+			}
+			message, err := cmds.MkDir(path, parent)
+			if err != nil {
+				output += err.Error() + "\n"
+			} else {
+				output += message + "\n"
+			}
+			continue
+		}
 		if instruction.command == "rep" {
 			id, route, name, err := getRep(instruction.options)
 			if err != nil {

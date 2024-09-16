@@ -2,6 +2,7 @@ package structures
 
 import (
 	"backend/utils"
+	"fmt"
 	"strconv"
 )
 
@@ -35,4 +36,41 @@ func (inode *Inode) GetDotStr(id int) string {
 	str += "<TR><TD>i_perm</TD><TD>" + string(inode.Perm[:]) + "</TD></TR>\n"
 	str += "</TABLE>>];\n"
 	return str
+}
+
+func (inode *Inode) GetAvailableBlock(offset int32, path string) (*DBlock, int32, int, error) {
+	// offset is block start of superblock
+	// for in range of blocks
+	for i := 0; i < 15; i++ {
+		// We're going to check each DBlock and see if they have any available space
+		if inode.Block[i] != -1 {
+			// Get the block
+			block := &DBlock{}
+			err := utils.Deserialize(block, path, int(offset+inode.Block[i]*64))
+			if err != nil {
+				return nil, -1, i, err
+			}
+			// Check if there's any available space, only need to check 2 and 3 index
+			for j := 2; j < 4; j++ {
+				content := block.Content[j]
+				if content.BInode == -1 {
+					return block, inode.Block[i], i, nil
+				}
+			}
+			fmt.Println("Block is full")
+			continue
+		}
+		// If the block is -1, we need to create a new block
+		newBlock := &DBlock{
+			Content: [4]Content{
+				{Name: [12]byte{'.'}, BInode: -1},
+				{Name: [12]byte{'.', '.'}, BInode: -1},
+				{Name: [12]byte{'-'}, BInode: -1},
+				{Name: [12]byte{'-'}, BInode: -1},
+			},
+		}
+		// If we created a new block, we need to send -1 as the block number
+		return newBlock, -1, i, nil
+	}
+	return nil, -1, -1, nil
 }

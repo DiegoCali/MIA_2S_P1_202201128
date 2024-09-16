@@ -289,3 +289,50 @@ func getChgrp(option []Option) (string, string, error) {
 	}
 	return user, group, nil
 }
+
+func getMkFile(option []Option) (string, bool, int, string, error) {
+	path := ""
+	createParents := false
+	size := 0
+	cont := ""
+	for _, opt := range option {
+		switch opt.Name {
+		case "path":
+			path = opt.Value
+		case "r":
+			createParents = opt.Value == "true"
+		case "size":
+			size, _ = strconv.Atoi(opt.Value)
+		case "cont":
+			cont = opt.Value
+		default:
+			return "\x00", false, -1, "\x00", fmt.Errorf("invalid option %s", opt.Name)
+		}
+	}
+	if path == "" {
+		return "\x00", false, -1, "\x00", fmt.Errorf("missing -path option")
+	}
+	if size < 0 {
+		return "\x00", false, -1, "\x00", fmt.Errorf("missing -size option")
+	}
+	return path, createParents, size, cont, nil
+}
+
+func getMkDir(option []Option) (string, bool, error) {
+	createParents := false
+	newDir := ""
+	for _, opt := range option {
+		switch opt.Name {
+		case "path":
+			newDir = opt.Value
+		case "p":
+			createParents = opt.Value == "true"
+		default:
+			return "\x00", false, fmt.Errorf("invalid option %s", opt.Name)
+		}
+	}
+	if newDir == "" {
+		return "\x00", false, fmt.Errorf("missing -path option")
+	}
+	return newDir, createParents, nil
+}

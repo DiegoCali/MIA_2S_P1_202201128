@@ -4,10 +4,179 @@ import (
 	"backend/utils"
 	"fmt"
 	"strings"
+	"time"
 )
 
+func (spBlock *SuperBlock) CreatePath(parents []string, isFile bool, inode *Inode, dir int32, dirParent int32, path string, offset int32) error {
+	// First iteration is inode as root
+	// Create first parent, we need to get first aviailable block from root inode
+	dirBlock, blockRef, index, err := inode.GetAvailableBlock(spBlock.BlockStart, path)
+	if err != nil {
+		return err
+	}
+	if blockRef == -1 {
+		// means a new block was created, so we need to update inode and superblock
+		inode.Block[index] = spBlock.BlocksCount
+		inode.Mtime = time.Now().Unix()
+		err = spBlock.UpdateBitmapBlock(path)
+		if err != nil {
+			return err
+		}
+		spBlock.FreeBlocksCount--
+		spBlock.BlocksCount++
+		spBlock.FirstBlock += spBlock.BlockSize
+	}
+	inode.Atime = time.Now().Unix()
+	err = utils.Serialize(inode, path, int(spBlock.InodeStart+offset*spBlock.InodeSize))
+	if err != nil {
+		return err
+	}
+	// Create new inode for first parent
+	newInode, inodeRef, err := spBlock.CreateInode(isFile, path, dir, dirParent)
+	if err != nil {
+		return err
+	}
+	// With dirBlock we can create the first parent
+	for i := 2; i < 4; i++ {
+		if dirBlock.Content[i].BInode == -1 {
+			if len(parents) > 0 {
+				copy(dirBlock.Content[i].Name[:], parents[0])
+				dirBlock.Content[i].BInode = inodeRef
+				break
+			}
+			break
+		}
+	}
+	err = utils.Serialize(dirBlock, path, int(spBlock.BlockStart+inode.Block[index]*spBlock.BlockSize))
+	if err != nil {
+		return err
+	}
+	// Create the rest of the parents, recursively
+	newParents := parents[1:]
+	if len(newParents) > 1 {
+		err = spBlock.CreatePath(newParents, false, newInode, inodeRef, dir, path, inodeRef)
+		if err != nil {
+			return err
+		}
+	} else if len(newParents) == 1 {
+		err = spBlock.CreatePath(newParents, isFile, newInode, inodeRef, dir, path, inodeRef)
+		if err != nil {
+			return err
+		}
+	}
+	// Serialize superblock
+	err = utils.Serialize(spBlock, path, int(spBlock.BMIndoeStart-76))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (spBlock *SuperBlock) FillFile(pathF []string, size int, cont []string, path string) error {
+	inode, ref, err := spBlock.getInode(pathF, path)
+	if err != nil {
+		return err
+	}
+	contStr := ""
+	if len(cont) > 0 {
+		inode, _, err = spBlock.getInode(cont, path)
+		if err != nil {
+			return err
+		}
+		contStr, err = spBlock.getInodeContent(inode, path)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Fill str with 0123456789 until size
+		strFiller := "0123456789"
+		complete := size / 10
+		rest := size % 10
+		for i := 0; i < complete; i++ {
+			contStr += strFiller
+		}
+		contStr += strFiller[:rest]
+	}
+	err = spBlock.writeInode(inode, path, contStr, int(spBlock.InodeStart+ref*spBlock.InodeSize))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (spBlock *SuperBlock) CreateInode(isFile bool, path string, dir int32, parentDir int32) (*Inode, int32, error) {
+	// Type 0 is directory, 1 is file by default
+	typeInode := [1]byte{'0'}
+	if isFile {
+		typeInode = [1]byte{'1'}
+	}
+	newInode := &Inode{
+		UID:   1,
+		GID:   1,
+		Size:  0,
+		Atime: time.Now().Unix(),
+		Ctime: time.Now().Unix(),
+		Mtime: time.Now().Unix(),
+		Block: [15]int32{spBlock.BlocksCount, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+		Type:  typeInode,
+		Perm:  [3]byte{'6', '6', '4'},
+	}
+	// Serialize inode
+	err := utils.Serialize(newInode, path, int(spBlock.FirstInode))
+	if err != nil {
+		return nil, -1, err
+	}
+	// Update bitmap
+	err = spBlock.UpdateBitmapInode(path)
+	if err != nil {
+		return nil, -1, err
+	}
+	// Save inode count as a reference
+	inodeRef := spBlock.InodesCount
+	// Update superblock
+	spBlock.FreeInodesCount--
+	spBlock.InodesCount++
+	spBlock.FirstInode += spBlock.InodeSize
+
+	// Create block for inode, depending on the type
+	if isFile {
+		newBlock := &FBlock{}
+		err = utils.Serialize(newBlock, path, int(spBlock.FirstBlock))
+		if err != nil {
+			return nil, -1, err
+		}
+	} else {
+		newBlock := &DBlock{
+			Content: [4]Content{
+				{Name: [12]byte{'.'}, BInode: dir},
+				{Name: [12]byte{'.', '.'}, BInode: parentDir},
+				{Name: [12]byte{'-'}, BInode: -1},
+				{Name: [12]byte{'-'}, BInode: -1},
+			},
+		}
+		err = utils.Serialize(newBlock, path, int(spBlock.FirstBlock))
+		if err != nil {
+			return nil, -1, err
+		}
+	}
+	// Update bitmap
+	err = spBlock.UpdateBitmapBlock(path)
+	if err != nil {
+		return nil, -1, err
+	}
+	// Update superblock
+	spBlock.FreeBlocksCount--
+	spBlock.BlocksCount++
+	spBlock.FirstBlock += spBlock.BlockSize
+	// Serialize superblock
+	err = utils.Serialize(spBlock, path, int(spBlock.BMIndoeStart-76))
+	if err != nil {
+		return nil, -1, err
+	}
+	return newInode, inodeRef, err
+}
+
 func (spBlock *SuperBlock) CatInode(pathFile []string, path string) (string, error) {
-	inode, err := spBlock.getInode(pathFile, path)
+	inode, _, err := spBlock.getInode(pathFile, path)
 	if err != nil {
 		return "File not found", err
 	}
@@ -18,13 +187,14 @@ func (spBlock *SuperBlock) CatInode(pathFile []string, path string) (string, err
 	return output, nil
 }
 
-func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, error) {
+func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, int32, error) {
 	inode := &Inode{}
 	// Get root inode
 	err := utils.Deserialize(inode, path, int(spBlock.InodeStart))
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
+	inodeRef := int32(-1)
 	// Get inode
 	for i := 0; i < len(pathFile); i++ {
 		fmt.Println("Searching for: ", pathFile[i])
@@ -37,7 +207,7 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, err
 				block := &DBlock{}
 				err := utils.Deserialize(block, path, int(spBlock.BlockStart+inode.Block[j]*spBlock.BlockSize))
 				if err != nil {
-					return nil, err
+					return nil, -1, err
 				}
 				// Ass block has 4 contents and the first two are parents
 				// You only need to check the last 2
@@ -46,8 +216,9 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, err
 					// Replace inode
 					err := utils.Deserialize(inode, path, int(spBlock.InodeStart+firstContent.BInode*spBlock.InodeSize))
 					if err != nil {
-						return nil, err
+						return nil, -1, err
 					}
+					inodeRef = firstContent.BInode
 					break
 				}
 				secondContent := block.Content[3]
@@ -55,14 +226,15 @@ func (spBlock *SuperBlock) getInode(pathFile []string, path string) (*Inode, err
 					// Replace inode
 					err := utils.Deserialize(inode, path, int(spBlock.InodeStart+firstContent.BInode*spBlock.InodeSize))
 					if err != nil {
-						return nil, err
+						return nil, -1, err
 					}
+					inodeRef = secondContent.BInode
 					break
 				}
 			}
 		}
 	}
-	return inode, nil
+	return inode, inodeRef, nil
 }
 
 func (spBlock *SuperBlock) getInodeContent(inode *Inode, path string) (string, error) {
@@ -121,6 +293,10 @@ func (spBlock *SuperBlock) writeInode(inode *Inode, path string, content string,
 			break
 		}
 	}
+	// Change inode size
+	inode.Size = int32(len(content))
+	// Change inode mtime
+	inode.Mtime = time.Now().Unix()
 	// Serialize inode
 	err := utils.Serialize(inode, path, offset)
 	if err != nil {
