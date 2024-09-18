@@ -45,6 +45,11 @@ func Rep(id string, route string, name string, pathLs string) (string, error) {
 		if err != nil {
 			return "Error creating report", err
 		}
+	case "file":
+		err := generateFileReport(path, id, route, pathLs)
+		if err != nil {
+			return "Error creating report", err
+		}
 	case "ls":
 		err := generateLsReport(path, id, route, pathLs)
 		if err != nil {
@@ -172,6 +177,43 @@ func generateBitmap(path string, id string, route string, inode bool) error {
 	}
 	return nil
 }
+
+func generateFileReport(path string, id string, route string, pathFile string) error {
+	// Read MBR
+	mbr := &structures.MBR{}
+	err := utils.Deserialize(mbr, path, 0)
+	if err != nil {
+		return err
+	}
+	partIndex, err := mbr.GetPartitionId(id)
+	if err != nil {
+		return err
+	}
+	offset := mbr.Partitions[partIndex].Start
+	// Read SuperBlock
+	spBlock := &structures.SuperBlock{}
+	err = utils.Deserialize(spBlock, path, int(offset))
+	if err != nil {
+		return err
+	}
+	// Get path
+	pathTokens := strings.Split(pathFile, "/")
+	if pathTokens[0] == "" {
+		pathTokens = pathTokens[1:]
+	}
+	// Get file str
+	fileStr, err := spBlock.CatInode(pathTokens, path)
+	if err != nil {
+		return err
+	}
+	// Generate .txt file
+	err = utils.GenerateTxt(route, fileStr)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func generateLsReport(path string, id string, route string, pathLs string) error {
 	// Read MBR
 	mbr := &structures.MBR{}

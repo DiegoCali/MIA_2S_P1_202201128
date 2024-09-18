@@ -30,6 +30,13 @@ func Parse(tokens []Token) (Stack, error) {
 				pos++
 				continue
 			}
+			if tokens[pos].kind == "COMMENT" {
+				// Create a new instruction
+				root.instruction = append(root.instruction, Instruction{"comment",
+					[]Option{{"value", tokens[pos].value}}})
+				pos++
+				continue
+			}
 			return root, fmt.Errorf("expected COMMAND, got %s", tokens[pos].kind)
 		}
 		instruction, newPos, err := readCommand(tokens, pos)
@@ -290,6 +297,10 @@ func Execute(root Stack) (string, error) {
 			} else {
 				output += message + "\n"
 			}
+			continue
+		}
+		if instruction.command == "comment" {
+			output += instruction.options[0].Value + "\n"
 			continue
 		}
 	}

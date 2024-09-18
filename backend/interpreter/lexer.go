@@ -19,6 +19,15 @@ func Lex(input string) ([]Token, error) {
 			pos++
 			continue
 		}
+		// Comments start with a hash and are saved as a single token
+		if character == '#' {
+			start := pos
+			for pos < len(input) && input[pos] != '\n' {
+				pos++
+			}
+			tokens = append(tokens, Token{"COMMENT", input[start:pos]})
+			continue
+		}
 		// newlines are terminators
 		if character == '\n' {
 			tokens = append(tokens, Token{"TERMINATOR", "n"})
